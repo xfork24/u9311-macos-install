@@ -1,0 +1,27 @@
+U9311/F · 2026-11-20
+OpenCore / 驱动使用的发行包，SHA-256 与下载地址
+
+7c4f416bf97e599cf9fe85347ad55a3c454e0eb9944a439a1b04ad16e8beb8bd  AMFIAnchor-0.1.2-Release.zip  https://github.com/b00t0x/AMFIAnchor/releases/download/0.1.2/AMFIAnchor-0.1.2-Release.zip
+d4d36cd2da7863cf7cbfcb0892d45c08457f4f4ddd065a073dd010e46bd63bcb  AppleALC-1.9.8-RELEASE.zip  https://github.com/acidanthera/AppleALC/releases/download/1.9.8/AppleALC-1.9.8-RELEASE.zip
+e1c1c55347526d031a8ae2fdd1f52efa3019161e497fb38e1cfa809752f8af21  BrcmPatchRAM-2.7.2-RELEASE.zip  https://github.com/acidanthera/BrcmPatchRAM/releases/download/2.7.2/BrcmPatchRAM-2.7.2-RELEASE.zip
+e21149519856308c6c4c06e0917aef9e3423ff3e23b6ea77989099f4f2cf0f0a  ECEnabler-1.0.6-RELEASE.zip  https://github.com/averycblack/ECEnabler/releases/download/1.0.6/ECEnabler-1.0.6-RELEASE.zip
+78418daa11f620012fc53ba68cbd643c2642a45f2f96c594fd01aaf2bc68fe2b  IntelBluetooth-v2.4.0.zip  https://github.com/OpenIntelWireless/IntelBluetoothFirmware/releases/download/v2.4.0/IntelBluetooth-v2.4.0.zip
+cc02ea7e972ead536a51e5f6725e79f121026dbf36a766e97044ef2483fd29bc  IntelMausi-1.0.8-RELEASE.zip  https://github.com/acidanthera/IntelMausi/releases/download/1.0.8/IntelMausi-1.0.8-RELEASE.zip
+53967d7dcfaab01023a33df2e969a89522f13d6654a6a56ac4711b62dabf3ab8  Lilu-1.7.2-RELEASE.zip  https://github.com/acidanthera/Lilu/releases/download/1.7.2/Lilu-1.7.2-RELEASE.zip
+2011e8b7216ecb2645d97ea710df965947edd406846e92050b9bc4190be6d27b  OpenCore-1.0.8-RELEASE.zip  https://github.com/acidanthera/OpenCorePkg/releases/download/1.0.8/OpenCore-1.0.8-RELEASE.zip
+c315a3a5acfd496dd97d0d19b4fbd1d487103d2fd541c5651583d4c9cebcfe07  USBToolBox-1.2.0-RELEASE.zip  https://github.com/USBToolBox/kext/releases/download/1.2.0/USBToolBox-1.2.0-RELEASE.zip
+2e29a8aaf91b4eb0bcdf5913ed17e70f5cf76531122acd4132eff7813a54de8b  VirtualSMC-1.3.8-RELEASE.zip  https://github.com/acidanthera/VirtualSMC/releases/download/1.3.8/VirtualSMC-1.3.8-RELEASE.zip
+3086735ac73a736cde53b0f06c8c9c0a551be9f912d8c9fbf5d04b8ecd973d89  VoodooI2C-927797d.zip  https://github.com/dortania/build-repo/releases/download/VoodooI2C-927797d/release.zip
+d5483298736ba4b3b82c7203d9a46968c668fb7af732b8b22c2096deb0acf83f  VoodooPS2Controller-2.3.7-RELEASE.zip  https://github.com/acidanthera/VoodooPS2/releases/download/2.3.7/VoodooPS2Controller-2.3.7-RELEASE.zip
+d56e3a7055b1dbb6f75f9f155bc4fe1ce1b5989b6038e79902e3a6cccce762e2  WhateverXe-0.8.3-RELEASE.zip  https://github.com/b00t0x/WhateverXe/releases/download/0.8.3/WhateverXe-0.8.3-RELEASE.zip
+f4c2d680a7c52c33a3f038ce6945da0aa2cc044e62b935a52ea046c7c473cfec  WhateverXe-Graphics-0.4.4.pkg  https://github.com/b00t0x/WhateverXe-Graphics/releases/download/v0.4.4/WhateverXe-Graphics-0.4.4.pkg
+31ed2e5b4bca92645bfab0a397a1f50212c72a04ea15591c061fe74233e4f82b  itlwm_v2.3.0_stable.kext.zip  https://github.com/OpenIntelWireless/itlwm/releases/download/v2.3.0/itlwm_v2.3.0_stable.kext.zip
+
+49cbe7abea742a3c662a836f14c05b79b3e6e6577c897b57101f5bd0a086eec8  HeliPort 1.5.0  https://github.com/OpenIntelWireless/HeliPort/releases/download/v1.5.0/HeliPort.dmg
+
+787000ebd869d2654d169098daa6e8dac646caf29b842695833f9d5847e2ec68  AMFIAnchorInjector Info.plist  https://raw.githubusercontent.com/b00t0x/AMFIAnchor/0.1.2/Injectors/AMFIAnchorInjector.kext/Contents/Info.plist
+
+Apple macOS Sequoia 15.8.3 (24H241), x86_64. 从 InstallAssistant.pkg 内的安装资源还原，使用苹果签名的 BaseSystem.chunklist 验证全部 128 个块。
+https://swcdn.apple.com/content/downloads/35/30/142-54123-A_L1FDSOKH17/4v632s6ip8ranyhu7hc09akv6d5239x9tq/InstallAssistant.pkg
+0ddd8edad00640cf40c27d378e0a64fde22a0838880811c3bc0bef1b070adc10  BaseSystem.chunklist
+54bd71da910666f676ada5b46316d9865726789e861b7b22d92ff90edeadb903  BaseSystem.dmg
