@@ -8,5 +8,5 @@
 普通安装 U 盘的 U9311 目录与本地 USB-U9311 目录
 • Backup/Ventoy-Export/U9311　两份 EFI 压缩包、联网恢复镜像、03W 日用引导镜像和配套工具。完整离线 IMG 在制作盘 Mac 的 Ventoy导出/U9311。
 • Backup/Ventoy-Export/Offline-IMG　离线镜像的还原工具、布局及补充数据。配合这支 U 盘根目录的苹果安装文件，可还原相同的 19 GiB IMG。完整命令见 Backup/Ventoy-Export/U9311/使用说明.txt。
-• Backup/InternalBoot/20261120-220252-FAT-names　富士通从内置盘成功启动三系统后留存的配置。esp-after.img 是整个共享 EFI 分区，包含 Windows、Ubuntu、macOS 启动文件。U9311Mac 是可单独恢复的 03W 目录，grub-custom.cfg 是验证通过的 GRUB 菜单项。
+• Backup/InternalBoot/20261120-220252-FAT-names　富士通从内置盘成功启动三系统后留存的配置。esp-after.img 是整个共享 EFI 分区，包含 Windows、Ubuntu、macOS 启动文件。U9311Mac 是可单独恢复的 03W 目录，64 个文件可按 profile.sha256 核对。grub-custom.cfg 是验证通过的 GRUB 菜单项，加载 EFI/U9311Mac/Bootstrap/Bootstrap.efi。
 • SHA256SUMS.txt　进入当前目录运行 shasum -a 256 -c SHA256SUMS.txt，可逐项检查备份。要核验整个离线 IMG，还需按上述说明运行还原工具。
