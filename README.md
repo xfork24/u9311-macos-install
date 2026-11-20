@@ -1,6 +1,6 @@
 # 富士通 U9311/F 安装 macOS Sequoia 15.8.3
 
-本机型号 FMVU34013，主板 FJNB2E2，BIOS 2.47。CPU 为 i5-1145G7，核显为 Iris Xe 80 EU（8086:9A49）。本配置用于 Windows 11、Ubuntu 24.04 和 macOS 三系统，使用 Ventoy 的 UEFI 启动菜单。
+本机型号 FMVU34013，主板 FJNB2E2，BIOS 2.47。CPU 为 i5-1145G7，核显为 Iris Xe 80 EU（8086:9A49）。本配置用于 Windows 11、Ubuntu 24.04 和 macOS 三系统。安装介质支持 Ventoy 和普通 GPT U 盘。
 
 **重启前先把中文指南存到手机。** U 盘上的同一份文件在 `U9311/安装说明.txt`，开头列出了每次重启应选的菜单项。安装系统需要接网线。抹盘前先在恢复环境检查联网情况，再用随附脚本核对内置 Micron 第 6 分区的 UUID 和精确容量。[完整安装说明](安装说明.txt)
 
@@ -53,9 +53,15 @@ cmp Ventoy-SHA256SUMS.txt /media/hengliu/Ventoy/U9311/SHA256SUMS.txt
 
 安装入口含恢复环境，安装时接电源和网线。首次实机安装前，两份配置已通过 OpenCore 1.0.8 的 ocvalidate 检查，模拟启动已到达苹果引导程序向 XNU 交接的阶段。普通 U 盘的实机验证结果见下节。开盖接电自动睡眠曾无法唤醒，复位后系统记录了 EFI 睡眠失败码 0x1F。
 
+## 内置盘三系统启动
+
+这台 U9311/F 已在拔掉 U 盘后，通过 Ubuntu 的 GRUB 菜单分别登录 Ubuntu 24.04、Windows 11 和 macOS Sequoia。日常启动 macOS 时，先选 `macOS Sequoia (OpenCore U9311)`，在 OpenCore 中再选 `MacOS`。固件 F12 菜单保留了原有的 Ubuntu、Windows Boot Manager，并新增了 `macOS Sequoia U9311`。[内置盘 GRUB 配置](U9311-Tools/03W-grub.cfg)
+
+内置盘使用 03W。首次复制到共享 EFI 时，三个驱动目录出现重复的 FAT 短文件名。Ubuntu 开机检查时将目录改名为 `FSCK0000.000`，OpenCore 随后在加载键盘驱动时报告缺少 `Info.plist`。在 Ubuntu 下恢复长文件名后，三个目录都获得了独立的短文件名，65 个文件通过逐项核对，修复后的镜像通过 `fsck.fat -n`。本机与普通 U 盘的备份目录 `Backup/InternalBoot/` 下，使用以 `-FAT-names` 结尾的目录中的 `esp-after.img` 恢复此次版本。[启动和恢复步骤](安装说明.txt)
+
 ## 普通 U 盘直启与备份
 
-U9311/F（BIOS 2.47）已通过普通 GPT U 盘安装 Sequoia 15.8.3。安装基线为 01F。桌面基线包括夏普 1920×1080 内屏的 eDP 速率修复、Metal 计算、AppleALC、Intel 蓝牙和 itlwm。03T 修正了 I²C3 总线编号，使触控板可以枚举；实机反馈仍有输入问题。03P 的轮询恢复了触控输入。03Q 修正了实体右键，指针移动仍偶有卡顿和跳跃。内置三系统引导须在确认日用 EFI 后部署。
+U9311/F（BIOS 2.47）已通过普通 GPT U 盘安装 Sequoia 15.8.3。安装基线为 01F。桌面基线包括夏普 1920×1080 内屏的 eDP 速率修复、Metal 计算、AppleALC、Intel 蓝牙和 itlwm。03T 修正了 I²C3 总线编号，使触控板可以枚举；实机反馈仍有输入问题。03P 的轮询恢复了触控输入。03Q 修正了实体右键。后续 03L 测试中内置触控板的指针移动仍会停顿、跳跃，外接鼠标正常。
 
 完成上面的 SMBIOS 和 Apple APFS 驱动准备后，可从项目根目录生成两个独立的 EFI 目录。参数中的压缩包为 OpenCore 1.0.8 DEBUG 官方发布包，脚本会核对组件 SHA-256。
 
@@ -68,7 +74,7 @@ python3 tools/build-direct-usb.py desktop /tmp/U9311-03Q-EFI --trackpad-buttons 
 
 屏幕亮度快捷键已在 03R 实测生效。富士通固件对内屏发送亮度加减通知，BrightnessKeys 负责交给 macOS 处理。在桌面构建命令中添加 `--brightness-keys ~/Downloads/BrightnessKeys-1.0.3-RELEASE.zip` 即可启用，保留原有系统设置滑块。[BrightnessKeys 1.0.3 官方发布](https://github.com/acidanthera/BrightnessKeys/releases/tag/1.0.3)
 
-03W 在 U9311/F 上通过了接电、开盖的手动睡眠与自动睡眠唤醒测试。自动睡眠的两次记录分别持续 187 秒和 40 秒，均从 Deep Idle 返回；内屏可操作。电池睡眠和合盖唤醒仍待实测。
+03W 在 U9311/F 上通过了接电、开盖的手动睡眠与自动睡眠唤醒测试。自动睡眠的两次记录分别持续 187 秒和 40 秒，均从 Deep Idle 返回；内屏可操作。电池睡眠和合盖唤醒仍待实测。另一次 03L 黑屏时 SSH 仍可用，系统的 Deep Idle 次数为 0。唤屏后 Intel 显卡驱动两次报告内屏链路训练失败，并将内屏标为离线。
 
 从 S0ixStandby v0.5.4 下载 Release ZIP 和 `SSDT-DEEPIDLE.aml`，保存到同一个目录。在桌面 EFI 构建命令中追加 `--deep-idle 下载目录`，脚本会核对两份文件的 SHA-256。重启后用 `kmutil showloaded | grep S0ixStandby` 和 `ioreg -r -c IOPMrootDomain -d 1 -l | grep IOPMDeepIdleSupported` 分别确认驱动已加载、Deep Idle 已启用。[S0ixStandby 官方发布](https://github.com/labrouss/S0ixStandby/releases/tag/v0.5.4)
 
