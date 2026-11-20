@@ -1,16 +1,36 @@
 富士通 U9311/F · macOS Sequoia 15.8.3（24H241）
 适用机型 FMVU34013，BIOS 2.47。此导出包使用本机的 OpenCore 身份。
 
-复制到已有 Ventoy U 盘
+从备份重建两种安装盘
+把此 U9311 文件夹保存在另一块磁盘上。它包含两种做法共用的 19 GiB 离线镜像、两份 EFI 和 Ventoy 制作工具。准备一支可清空的 32 GB 或更大 U 盘。先在此目录执行 shasum -a 256 -c SHA256SUMS.txt（Ubuntu 用 sha256sum -c SHA256SUMS.txt），确认全部 OK。
+
+一、制作 Ventoy 安装盘
+已有 Ventoy 的 U 盘可直接跳到复制步骤。从空白 U 盘开始时，可在这台富士通的 Ubuntu 中使用随附的 Tools/ventoy-1.1.18-linux.tar.gz。把它解压到电脑的临时目录，打开解压出的 ventoy-1.1.18 文件夹，在终端执行 lsblk -o NAME,SIZE,MODEL,TRAN,MOUNTPOINTS，按型号、容量和 usb 标记认准整支目标 U 盘，并卸载它已挂载的分区。Ventoy 安装会抹掉所选整盘。下面的 /dev/sdX 是占位符，须替换为该外置整盘的实际设备名。
+  sudo sh Ventoy2Disk.sh -i -g /dev/sdX
+成功后重新插拔目标 U 盘。此工具来自 https://github.com/ventoy/Ventoy/releases/tag/v1.1.18 ，安装参数见 https://www.ventoy.net/en/doc_start.html 。
+
+复制到 Ventoy 数据分区
 把整个 U9311 文件夹放到 Ventoy 的大数据分区。建议预留 22 GiB 空间，可使用 exFAT 或 NTFS。单个离线镜像为 19 GiB，超过 FAT32 的单文件限制。保留 Ventoy 自己的小 EFI 分区及原有文件。
 在这台 Mac 核对复制结果时，在终端输入 cd 和一个空格，把复制后的 U9311 文件夹拖进终端，按回车。再运行 shasum -a 256 -c SHA256SUMS.txt，清单各项都应显示 OK。
 
 安装时选哪个
+导出包没有指定 Ventoy 自动启动项。在 Ventoy 菜单手动选下面对应的 IMG。
 1. 接电源。开机按 F12，选 Ventoy U 盘的 UEFI 项。在 Ventoy 正常模式选 01F-Sequoia-15.8.3-Offline.img。在 OpenCore 选外置的 Install macOS Sequoia；若被隐藏，按空格展开。它包含苹果完整安装器，可供离线安装。
-2. 若镜像内的安装器在实体机交接后找不到安装资源，先用原普通安装 U 盘上的同版完整安装器继续。01F-Sequoia-15.8.3-Recovery.img 是独立的联网恢复入口，启动后选名称带 (dmg) 的 Sequoia 项；从这个入口重新安装时需要能访问苹果下载服务。
+2. 若富士通通过 Ventoy 启动后找不到安装资源，可用下文的普通直启盘加载同一份离线安装器。01F-Sequoia-15.8.3-Recovery.img 是独立的联网恢复入口，启动后选名称带 (dmg) 的 Sequoia 项；从这个入口重新安装时需要能访问苹果下载服务。
 3. 本机已有 APFS 目标卷 MacOS。需要重装时核对目标卷，并先备份其数据。共享硬盘上的 Windows、Ubuntu 和 EFI 分区都要保留。项目的 check-target.sh 用于原始 96 GiB FAT 目标，在已改成 APFS 的机器上应以磁盘工具显示的卷和物理位置核对。
 4. 安装期间每次重启继续选 01F，在 OpenCore 优先选 macOS Installer。该项消失后，选已安装的 MacOS，完成首次设置。
 5. 日常启动在 Ventoy 选 03W-Sequoia-Desktop.img，再选 MacOS。现有三系统已可从内置盘启用 03W。仅在新装系统配置显卡时，从 03W 进入桌面、核对整包 SHA-256 后运行 Tools/WhateverXe-Graphics-0.4.4.pkg，装好再从 03W 重启。无线使用 Tools/HeliPort-remember.tgz 内的 HeliPort.app，将其放进“应用程序”后以桌面用户运行 Tools/enable-heliport.sh。
+
+二、制作普通直启安装 U 盘
+最简单的方法是在 Ubuntu 打开「磁盘」，按容量、型号选中新 U 盘本身，在右上角的整盘菜单选「恢复磁盘映像」。选择本目录的 01F-Sequoia-15.8.3-Offline.img，核对目标再开始。写入会抹掉目标整盘。IMG 已包含 GPT、小 EFI 分区里的 01F 和完整苹果安装卷。写完后重新插拔 U 盘。目标比镜像大时，余下空间可留空；若工具提示备用 GPT 表不在盘尾，可在卸载该 U 盘各分区后，用 Ubuntu 的 gdisk 软件包执行 sudo sgdisk -e /dev/sdX，再用 sudo sgdisk -v /dev/sdX 核对。这里的设备名同样要换成刚写入的外置整盘。
+开机按 F12 选这支普通 U 盘，在 OpenCore 选 Install macOS Sequoia。安装期间重启仍从它进入，优先选 macOS Installer，直到该项消失。日常使用已装好的系统选内置 03W。若需要制作独立的 03W 应急启动盘，可将 03W-Sequoia-Desktop.img 按同样的整盘恢复方法写入另一支 U 盘。
+
+在 Mac 上用苹果工具重做普通盘
+在此目录运行下面一行，只读挂载同一份 IMG。从 Finder 打开输出中列出的安装卷，把卷根目录的 Install macOS Sequoia.app 复制到「应用程序」。制作盘 Mac 上若已有同版本的完整 App，可直接使用。
+  hdiutil attach -readonly -imagekey diskimage-class=CRawDiskImage "01F-Sequoia-15.8.3-Offline.img"
+拔下其他可移动目标盘。打开「磁盘工具」→「显示所有设备」，按型号选中要清空的新外置 U 盘，选择 GUID 分区图、Mac OS 扩展（日志式），名称填 MyVolume。以下命令会抹掉选定的目标卷。
+  sudo "/Applications/Install macOS Sequoia.app/Contents/Resources/createinstallmedia" --volume /Volumes/MyVolume
+制作完成后运行 diskutil list external physical，按型号及容量找到这支 U 盘，并找出它的小 EFI 分区，例如 diskNs1。用 sudo diskutil mount diskNs1 挂载实际分区，将 EFI-01F.zip 解压所得的 EFI 文件夹放入该分区根目录。应能看到 EFI/BOOT/BOOTx64.efi 和 EFI/OC/config.plist。弹出新 U 盘后按上一段从 F12 启动。苹果制作说明见 https://support.apple.com/zh-cn/101578 。
 
 文件用途
 • EFI-01F.zip 和 EFI-03W.zip 分别提供独立的安装 EFI 和日用 EFI。分别解压都会得到完整 EFI 目录。使用 Ventoy 的 IMG 启动时，无需解压它们。部署到共享内置 EFI 时保留原有 Microsoft 和 ubuntu 目录。

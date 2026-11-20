@@ -1,2 +1,0 @@
-d4e39a6ce1e1b1ef13a138ae5f3f9a5f68769fdec46ff8a13611892b96b58359  01-U9311-Sequoia-15.8.3-Install.img
-f9b1ac55973c3299c7f962c0bafcda39bcfb52ae87cfa0601607a1a83fd9adae  02-U9311-Sequoia-Metal.img

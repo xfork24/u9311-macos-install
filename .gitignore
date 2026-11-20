@@ -1,7 +1,7 @@
 /.work/
 /backup/
 /Media/*
-!/Media/SHA256SUMS.txt
+!/Media/README.md
 *.dmg
 *.img
 *.pkg

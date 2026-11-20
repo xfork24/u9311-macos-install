@@ -10,6 +10,7 @@ import subprocess
 import shutil
 import sys
 import tempfile
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -82,13 +83,15 @@ def store_file(source, target, expected):
         temp.unlink(missing_ok=True)
 
 
-def synchronize(backup, usb):
+def synchronize(backup, usb=None, *, installer=None):
     mirror = backup / "USB-U9311"
     export = backup / "Ventoy导出/U9311"
+    targets = (mirror, usb) if usb is not None else (mirror,)
+    installer = usb.parent if usb is not None else installer
     entries = {}
 
     def copy_item(relative, expected=None, preferred=None, export_path=None):
-        sources = [mirror / relative, usb / relative]
+        sources = [base / relative for base in targets]
         if preferred is not None:
             sources.insert(0, preferred)
         if expected is None:
@@ -98,17 +101,17 @@ def synchronize(backup, usb):
             source = next((p for p in sources if p.is_file() and digest(p) == expected), None)
             if source is None:
                 raise ValueError(f"No verified copy of {relative}")
-        for base in (mirror, usb):
+        for base in targets:
             store_file(source, base / relative, expected)
         if export_path is not None:
             store_file(source, export_path, expected)
         entries[relative.as_posix()] = expected
 
     # The full offline IMG is already present on the USB as reconstructible extents.
-    sums = existing(export / SUMS, mirror / PACKAGE / SUMS, usb / PACKAGE / SUMS)
+    sums = existing(export / SUMS, *(base / PACKAGE / SUMS for base in targets))
     package = manifest(sums)
     failures = []
-    for base in (mirror, usb):
+    for base in targets:
         compact = base / COMPACT
         try:
             layout = json.loads((compact / "layout.json").read_text())
@@ -116,7 +119,7 @@ def synchronize(backup, usb):
             if offline not in package or package[offline] != layout["sha256"]:
                 raise ValueError("offline IMG checksum differs from export manifest")
             subprocess.run([sys.executable, str(ROOT / "tools/restore-offline-img.py"),
-                            str(compact), str(usb.parent)], check=True)
+                            str(compact), str(installer)], check=True)
             break
         except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
             failures.append(f"{compact}: {error}")
@@ -128,7 +131,7 @@ def synchronize(backup, usb):
         with tempfile.TemporaryDirectory(dir=export) as work:
             temp = Path(work) / "offline.img"
             subprocess.run([sys.executable, str(ROOT / "tools/restore-offline-img.py"),
-                            str(compact), str(usb.parent), "--output", str(temp)], check=True)
+                            str(compact), str(installer), "--output", str(temp)], check=True)
             temp.replace(image)
 
     for name in ("layout.json", "remaining-bytes.gz"):
@@ -140,35 +143,66 @@ def synchronize(backup, usb):
     copy_item(PACKAGE / SUMS, preferred=sums, export_path=export / SUMS)
 
     for name, prefix in (("esp-after.img.sha256", INTERNAL), ("profile.sha256", INTERNAL / "U9311Mac")):
-        listing = existing(mirror / INTERNAL / name, usb / INTERNAL / name)
+        listing = existing(*(base / INTERNAL / name for base in targets))
         for member, checksum in manifest(listing).items():
             copy_item(prefix / member, checksum)
         copy_item(INTERNAL / name, preferred=listing)
+    # The original USB's rEFInd selector opens this path on the installer data volume.
+    media = Path("Backup/BootFiles/Media")
+    loader = media / "03W-Sleep-DirectUSB/OC03W"
+    with zipfile.ZipFile(mirror / PACKAGE / "EFI-03W.zip") as archive, tempfile.TemporaryDirectory(dir=backup) as work:
+        archive.getinfo("EFI/OC/OpenCore.efi")
+        source = Path(work) / "member"
+        for member in archive.infolist():
+            if member.is_dir() or not member.filename.startswith("EFI/OC/"):
+                continue
+            relative = Path(member.filename.removeprefix("EFI/OC/"))
+            if relative.is_absolute() or ".." in relative.parts:
+                raise ValueError(f"Invalid OpenCore path: {member.filename}")
+            source.write_bytes(archive.read(member))
+            copy_item(loader / relative, preferred=source)
+
+    # The menu snapshot belongs to the original stick; new sticks can use standalone 01F.
+    esp = media / "USB-ESP"
+    original = ROOT / "Media/USB-ESP"
+    receipt = "EFI-03L-USB.sha256"
+    receipts = [original / receipt, *(base / esp / receipt for base in targets)]
+    if any(path.is_file() for path in receipts):
+        listing = existing(*receipts)
+        for name, checksum in manifest(listing).items():
+            copy_item(esp / name, checksum, original / name)
+        copy_item(esp / receipt, preferred=listing)
     grub = mirror / PACKAGE / "Tools/03W-grub.cfg"
     copy_item(INTERNAL / "grub-custom.cfg", digest(grub), grub)
-    copy_item(Path("使用说明.txt"), preferred=ROOT / "U9311-Tools/备份目录说明.txt")
+    copy_item(Path("使用说明.txt"), preferred=ROOT / "U9311-Tools/备份目录说明.txt",
+              export_path=backup / "从这里开始.txt")
 
     listing = "".join(f"{checksum}  {name}\n" for name, checksum in sorted(entries.items()))
     with tempfile.TemporaryDirectory(dir=backup) as work:
         source = Path(work) / SUMS
         source.write_text(listing)
-        for base in (mirror, usb):
+        for base in targets:
             store_file(source, base / SUMS, digest(source))
-    print(f"Verified {len(entries)} files in {mirror} and {usb}", flush=True)
+    print(f"Verified {len(entries)} files in " + " and ".join(map(str, targets)), flush=True)
 
 
 def main():
     os.umask(0o077)
     backup = ROOT / "backup"
-    mirror = backup / "USB-U9311"
     backup.mkdir(exist_ok=True)
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--identify", nargs=2, metavar=("DATA_GPT_UUID", "EFI_GPT_UUID"),
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--local-from-installer", type=Path, metavar="VOLUME",
+                      help="verify against a mounted installer volume and update only the local backup")
+    mode.add_argument("--identify", nargs=2, metavar=("DATA_GPT_UUID", "EFI_GPT_UUID"),
                         help="remember the two GPT partition IDs of the installer USB")
     args = parser.parse_args()
     ids_file = backup / "usb-partition-ids"
     with (backup / ".sync.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        if args.local_from_installer:
+            synchronize(backup, installer=args.local_from_installer)
+            return
         if args.identify:
             ids = [value.upper() for value in args.identify]
         elif ids_file.exists():

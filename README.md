@@ -2,7 +2,7 @@
 
 本机型号 FMVU34013，主板 FJNB2E2，BIOS 2.47。CPU 为 i5-1145G7，核显为 Iris Xe 80 EU（8086:9A49）。本配置用于 Windows 11、Ubuntu 24.04 和 macOS 三系统。安装介质支持 Ventoy 和普通 GPT U 盘。
 
-**重启前先把中文指南存到手机。** U 盘上的同一份文件在 `U9311/安装说明.txt`，开头列出了每次重启应选的菜单项。安装系统需要接网线。抹盘前先在恢复环境检查联网情况，再用随附脚本核对内置 Micron 第 6 分区的 UUID 和精确容量。[完整安装说明](安装说明.txt)
+已有本机导出包时，安装首选 `01F-Sequoia-15.8.3-Offline.img`，日常启动选 `03W-Sequoia-Desktop.img`。完整苹果安装 App 也在离线镜像中。普通 U 盘可以直接整盘恢复同一份离线 IMG。在 Mac 上也可挂载 IMG 取出 App，用苹果工具重新制作。备份中附有从空白 U 盘制作 Ventoy 的 Linux 工具。[普通安装盘恢复步骤](Media/README.md#从本地恢复普通安装-u-盘) · [Ventoy 使用说明](U9311-Tools/Ventoy导出说明.txt)
 
 | 路径 | 用途 |
 | --- | --- |
@@ -10,7 +10,7 @@
 | `EFI/` | 进入桌面后的 Metal 入口，搭配 WhateverXe 0.8.3 和 Graphics 0.4.4 |
 | `ACPI-source/` | 根据本机固件编写的 SSDT 源码 |
 | `U9311-Tools/` | 苹果下载连通性检查、分区核对、Metal 验证、GRUB 入口、驱动卸载、上游下载地址和哈希 |
-| `Media/SHA256SUMS.txt` | 早期 Ventoy 实验镜像的校验值 |
+| `Media/` | 01F 安装配置、03W 日用配置与驱动构建材料、原普通 U 盘的 EFI 恢复镜像。[目录说明](Media/README.md) |
 | `Ventoy-SHA256SUMS.txt` | 早期 Ventoy 介质的校验清单。当前导出包使用包内的 `SHA256SUMS.txt` |
 
 在 Ubuntu 核对早期 Ventoy 介质时，可从仓库目录运行下面两行。第一行比对清单，第二行实际读取两份镜像、工具、说明和备份。仓库用模板保存配置，用下载地址和校验值标识苹果镜像及第三方安装包。本机的 SMBIOS 标识和原引导备份保存在本机及 U 盘。
@@ -61,9 +61,9 @@ cmp Ventoy-SHA256SUMS.txt /media/hengliu/Ventoy/U9311/SHA256SUMS.txt
 
 ## 内置盘三系统启动
 
-这台 U9311/F 已在拔掉 U 盘后，通过 Ubuntu 的 GRUB 菜单分别登录 Ubuntu 24.04、Windows 11 和 macOS Sequoia。日常启动 macOS 时，先选 `macOS Sequoia (OpenCore U9311)`，在 OpenCore 中再选 `MacOS`。固件 F12 菜单保留了原有的 Ubuntu、Windows Boot Manager，并新增了 `macOS Sequoia U9311`。[内置盘 GRUB 配置](U9311-Tools/03W-grub.cfg)
+这台 U9311/F 已在拔掉 U 盘后，通过 Ubuntu 的 GRUB 菜单分别登录 Ubuntu 24.04、Windows 11 和 macOS Sequoia。内置 OpenCore 的菜单也可选择 `Ubuntu 24.04`，通过 Ubuntu 原有的 shim 进入 GRUB 后选择 `Ubuntu`，已实机进入桌面。日常启动 macOS 时，先选 `macOS Sequoia (OpenCore U9311)`，在 OpenCore 中再选 `MacOS`。固件 F12 菜单保留了原有的 Ubuntu、Windows Boot Manager，并新增了 `macOS Sequoia U9311`。[内置盘 GRUB 配置](U9311-Tools/03W-grub.cfg)
 
-内置盘使用 03W。首次复制到共享 EFI 时，三个驱动目录出现重复的 FAT 短文件名。Ubuntu 开机检查时将目录改名为 `FSCK0000.000`，OpenCore 随后在加载键盘驱动时报告缺少 `Info.plist`。在 Ubuntu 下恢复长文件名后，三个目录都获得了独立的短文件名。当前备份已移除指向旧入口的 `add-to-grub.sh`。内置 03W 目录的 64 个文件已逐项核对，共享 EFI 分区也已通过 FAT 检查。本机与普通 U 盘的备份目录 `Backup/InternalBoot/` 下，使用以 `-FAT-names` 结尾的目录中的 `esp-after.img` 恢复此次版本。[启动和恢复步骤](安装说明.txt)
+内置盘使用 03W。首次复制到共享 EFI 时，三个驱动目录出现重复的 FAT 短文件名。Ubuntu 开机检查时将目录改名为 `FSCK0000.000`，OpenCore 随后在加载键盘驱动时报告缺少 `Info.plist`。在 Ubuntu 下恢复长文件名后，三个目录都获得了独立的短文件名。当前备份已移除指向旧入口的 `add-to-grub.sh`。内置 03W 目录的 64 个文件已逐项核对，共享 EFI 分区也已通过 FAT 检查。制作盘 Mac 的 `backup/USB-U9311/Backup/InternalBoot/` 下，以 `-FAT-names` 结尾的目录保存本机最新的 `esp-after.img`，包括已经实测的 OpenCore Ubuntu 菜单项。[启动和恢复步骤](安装说明.txt)
 
 ## 普通 U 盘直启与备份
 
@@ -88,6 +88,6 @@ python3 tools/build-direct-usb.py desktop /tmp/U9311-03Q-EFI --trackpad-buttons 
 
 桌面入口使用 WhateverXe 的 eDP 速率表修复。Wi-Fi 从 HeliPort 菜单连接，连接时勾选“记住此网络”，安装 HeliPort 后以桌面用户运行 `sh U9311-Tools/enable-heliport.sh`，使 HeliPort 随登录启动并隐藏系统无线菜单。[显卡修复源码](https://github.com/Karthik1268/WhateverXe/commit/d1bc03d25ea2c8adc6660172cca455fa138b9eb6) · [itlwm 使用说明](https://openintelwireless.github.io/itlwm/FAQ.html)
 
-普通 U 盘接回制作盘的 Mac 后，运行 `python3 tools/sync-usb.py`。新克隆首次同步时加上 `--identify 数据分区的GPT标识 EFI分区的GPT标识`，两个值取自 `diskutil info` 的 Disk / Partition UUID。脚本核对分区身份，同步 01F 安装包、03W 日用引导和通过实机验证的内置三系统 EFI，并从 U 盘上的苹果安装文件重新计算完整离线镜像的 SHA-256。制作盘的 `backup/Ventoy导出/U9311/` 可直接复制到 Ventoy，`backup/USB-U9311/` 与普通安装 U 盘的 `U9311/` 存放相同的恢复文件和校验清单。[备份目录说明](U9311-Tools/备份目录说明.txt)
+普通 U 盘接回制作盘的 Mac 后，运行 `python3 tools/sync-usb.py`。新克隆首次同步时加上 `--identify 数据分区的GPT标识 EFI分区的GPT标识`，两个值取自 `diskutil info` 的 Disk / Partition UUID。脚本核对分区身份，同步 01F 安装包、03W 日用引导和通过实机验证的内置三系统 EFI，并从 U 盘上的苹果安装文件重新计算完整离线镜像的 SHA-256。普通盘未连接时，可先只读挂载本地完整 IMG，然后运行 `python3 tools/sync-usb.py --local-from-installer "/实际挂载的安装卷路径"`，仅更新本地备份。同步成功后，本地入口说明为 `backup/从这里开始.txt`。[备份目录说明](U9311-Tools/备份目录说明.txt)
 
 在 U9311/F 上，HeliPort 1.5.0 有过连接超时后仍未记住网络的情况。本机验证的补丁会在用户勾选「记住此网络」后立即把凭据写入登录钥匙串，只有不含密码的网络元数据进入备注。连接确认最多等待 120 秒。补丁可在官方 1.5.0 源码根目录用 `git apply /path/to/remember-network.patch` 应用，再以 Xcode 构建 HeliPort scheme 的 macOS Release 版本。实测重启进入桌面后，无需输入密码即可自动联网。 [HeliPort 补丁](DirectUSB/HeliPort/remember-network.patch) · [原版源码](https://github.com/OpenIntelWireless/HeliPort/tree/v1.5.0)
