@@ -2,15 +2,23 @@
 
 本机型号 FMVU34013，主板 FJNB2E2，BIOS 2.47。CPU 为 i5-1145G7，核显为 Iris Xe 80 EU（8086:9A49）。本配置用于 Windows 11、Ubuntu 24.04 和 macOS 三系统，使用 Ventoy 的 UEFI 启动菜单。
 
-**已有制作好的 U 盘时，直接按中文指南安装。** 目标是内置 Micron 最后的 96 GiB 分区。抹盘前用随附脚本核对 GPT 分区 UUID；Windows 分区与目标容量接近。[完整安装说明](安装说明.txt)
+**重启前先把中文指南存到手机。** U 盘上的同一份文件在 `U9311/安装说明.txt`，开头列出了每次重启应选的菜单项。安装系统需要接网线。抹盘前先在恢复环境检查联网情况，再用随附脚本核对内置 Micron 第 6 分区的 UUID 和精确容量。[完整安装说明](安装说明.txt)
 
 | 路径 | 用途 |
 | --- | --- |
 | `Install/EFI/` | 在线安装入口，保持完整 SIP |
 | `EFI/` | 进入桌面后的 Metal 入口，搭配 WhateverXe 0.8.3 和 Graphics 0.4.4 |
 | `ACPI-source/` | 根据本机固件编写的 SSDT 源码 |
-| `U9311-Tools/` | 分区核对、Metal 验证、GRUB 入口、驱动卸载、上游下载地址和哈希 |
+| `U9311-Tools/` | 苹果下载连通性检查、分区核对、Metal 验证、GRUB 入口、驱动卸载、上游下载地址和哈希 |
 | `Media/SHA256SUMS.txt` | 最初写入 Ventoy 的两份镜像的校验值 |
+| `Ventoy-SHA256SUMS.txt` | 本次交付到这支 U 盘的完整清单，与盘上 `U9311/SHA256SUMS.txt` 内容一致 |
+
+在本机 Ubuntu 核对整支安装盘时，可从仓库目录运行下面两行。第一行比对清单，第二行实际读取两份镜像、工具、说明和备份。仓库用模板保存配置，用下载地址和校验值标识苹果镜像及第三方安装包。本机的 SMBIOS 标识和原引导备份保存在本机及 U 盘。
+
+```sh
+cmp Ventoy-SHA256SUMS.txt /media/hengliu/Ventoy/U9311/SHA256SUMS.txt
+(cd /media/hengliu/Ventoy/U9311 && sha256sum -c SHA256SUMS.txt)
+```
 
 ## 从新克隆恢复启动文件
 
@@ -36,7 +44,7 @@
    echo 'c4739b191bc44629e9f2703ee15c1645825ecb46b9f77a5c08df706060b78287  Install/EFI/OC/Drivers/apfs.efi' | sha256sum -c -
    ```
 
-4. 构建两个 Ventoy 镜像。将生成的两份 `.img` 文件复制到 Ventoy 数据卷的 `U9311/` 下。将 `U9311-Tools/` 的内容复制到 U 盘的 `U9311/Tools/`。按清单下载 `WhateverXe-Graphics-0.4.4.pkg` 和 `HeliPort.dmg`，核对哈希后放入同一个 Tools 目录。镜像中含本次生成的身份、GPT 标识和 FAT 元数据，重新构建后应为新镜像计算校验值。[组件来源与校验](U9311-Tools/来源与校验.txt)
+4. 构建两个 Ventoy 镜像。将生成的两份 `.img` 和仓库的 `安装说明.txt` 复制到 Ventoy 数据卷的 `U9311/` 下。将 `U9311-Tools/` 的内容复制到 U 盘的 `U9311/Tools/`。按清单下载 `WhateverXe-Graphics-0.4.4.pkg` 和 `HeliPort.dmg`，核对哈希后放入同一个 Tools 目录。镜像中含本次生成的身份、GPT 标识和 FAT 元数据，重新构建后应为新镜像计算校验值。[组件来源与校验](U9311-Tools/来源与校验.txt)
 
    ```sh
    bash tools/build-media.sh dist

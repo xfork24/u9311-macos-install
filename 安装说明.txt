@@ -1,85 +1,118 @@
-富士通 LIFEBOOK U9311/F · 从 Ventoy 一次安装 macOS Sequoia 15.8.3
-适用本机 FMVU34013 / FJNB2E2 / BIOS 2.47。准备日期 2026-11-20。
+富士通 LIFEBOOK U9311/F · 用 Ventoy 安装 macOS Sequoia 15.8.3
+适用本机 FMVU34013 / FJNB2E2 / BIOS 2.47，2026-11-20 修订。
 
-一、开机前
-接电源，接入能自动获取 IP 的路由器网线。Ubuntu 识别到板载 Intel I219-LM，制作时网口没有插线。准备一个普通 USB 鼠标，U 盘优先插在制作时使用的同一个 USB-A 口。先用笔记本内屏，拔掉扩展坞和外接显示器。把个人重要文件备份到另一设备，若 Windows 启用了 BitLocker/设备加密，先确认手头有恢复密钥。U 盘 Backup 中有本机原 Windows/Ubuntu EFI 目录的压缩备份、启动顺序和分区清单；个人文档需单独备份。
+开机前先把这份文件存到手机，断网打开一次。也可以拍下本页及第三节。U 盘里的位置是 U9311/安装说明.txt。全文可以离线看；这套 U 盘带有苹果恢复环境，安装系统时要接能直接上网的网线。
 
-U 盘的 U9311 目录有两个入口。01 是带苹果安装环境的启动镜像；02 是装好系统后启用显卡、声卡、无线等驱动的启动镜像。完整的系统文件仍要从苹果下载，只需在目标分区安装一次。使用 01 时桌面刷新较慢属预期。macOS 安装器和显卡驱动分两步启用，无需安装第二遍 macOS。
+每次开机该选哪一项（可拍照）
+  第一次进恢复工具       F12 → UEFI USB / OnlyDisk → Ventoy 的 01 → Install macOS Sequoia 15.8.3 (dmg)
+  第一次自动重启以后     F12 → 同一 U 盘 → 01 → macOS Installer（只要这项还在，继续选它）
+  macOS Installer 消失   F12 → 同一 U 盘 → 01 → U9311-Sequoia → 完成首次设置，进入桌面
+  桌面确认 15.8.x 以后   F12 → 同一 U 盘 → 02 → U9311-Sequoia → 按第五节检查、装显卡包、重启再选 02
+  需要回到原来的系统     正常关机 → 拔 U 盘 → 开机按 F12 → Ubuntu 或 Windows Boot Manager
 
-这台电脑的 Secure Boot 已关闭，NVMe 直连，Windows 与 Ubuntu 已经使用 UEFI。初次启动沿用现有 BIOS 设置。保留 TPM、磁盘控制器模式和现有启动项。显存预留寄存器 GGC 实测为 02c1，GMS=02，对应 64 MiB。先按当前设置试机；上游推荐的可选值是 96 MB，专给固定 60 MB 机器的补丁不适用于本次读数。
+只在第一次将预留 FAT32 分区改为 APFS 时抹一次。Windows 约 102.1 GB，macOS 目标约 103.1 GB。第三节的只读工具匹配成功才会给出抹盘命令。已经见到安装进度或已经有 U9311-Sequoia 卷，直接看第四节。
 
-二、从 U 盘进入苹果恢复环境
-1. 重启，看见 Fujitsu 标志立即反复按 F12。如功能键处于多媒体模式，试 Fn+F12。选择 USB HDD / OnlyDisk 的 UEFI 项，出现 Ventoy 彩色菜单。
-2. 上下键找到 01-U9311-Sequoia-15.8.3-Install.img，按 Enter。如 Ventoy 询问模式，先选普通模式。
-3. 出现黑底 OpenCore Boot Menu 后，用方向键选“Install macOS Sequoia 15.8.3 (dmg)”并回车。实际菜单编号会随磁盘数变化，按名称选。VTOYEFI 会返回 Ventoy。画面滚动白字是详细启动模式。
-4. 到语言选择或“macOS 恢复”后选简体中文。顶部菜单“实用工具 → 终端”，输入 sw_vers。准备的恢复环境应显示 ProductVersion 15.8.3、BuildVersion 24H241。看到其他版本就先退出核对启动项。
-5. 先确认网络。终端输入以下命令，第二行应出现 HTTP 状态或响应头；个别根网址返回 403/404 也表示域名、TLS 和服务器已连通，不代表软件包都能下载。
-   ifconfig
-   curl -IL --max-time 15 https://swcdn.apple.com/
-   若有线没有地址，确认网线另一端接路由器的 LAN 口，试另一根或另一端口。恢复环境依赖有线；AX201 的 HeliPort 放在安装后使用。出现证书日期错误时先用 date 核对时间。
+一、开机前准备
+1. 接电源，备份个人重要文件到另一台设备。Windows 若开启 BitLocker / 设备加密，确认能从另一设备或纸上取到恢复密钥。U 盘 Backup 有原 Windows / Ubuntu 的 EFI 引导文件、启动顺序和分区清单。个人资料需要另备。
+2. 用网线把笔记本的板载网口接到能自动分配地址（DHCP）、无需网页或账号认证的路由器 LAN 口。制作时 Ubuntu 的 Intel I219-LM 网口没有链路，只有 Wi-Fi 连着。可先在 Ubuntu 菜单暂时断开 Wi-Fi，确认有线仍能上网；进苹果恢复环境后还要再做第二节的检查。01 中提供有线网卡驱动，内置 AX201 无线要到装好系统、用 02 启动后才能尝试。
+3. U 盘插在制作时用的 USB-A 口，直接连接电脑。打开笔记本内屏，拔掉扩展坞和外接屏；备一个普通 USB 鼠标，必要时用 USB 键盘。初次用 01 启动时没有显卡加速，界面可能较慢。先沿用这台机器现有的 BIOS 设置（UEFI、Secure Boot 已关闭、NVMe 直连）。
+4. 在 Ubuntu 文件管理器点 Ventoy → U9311，应看见 01-U9311-Sequoia-15.8.3-Install.img、02-U9311-Sequoia-Metal.img、这份说明、Tools 和 Backup。启动文件是 .img，位于卷根的 U9311 文件夹。这次安装无需删原有 ISO。想在重启前自己复核整套文件，可在 Ubuntu 终端运行下行，等每一项都显示“成功”或“OK”。
+   (cd /media/hengliu/Ventoy/U9311 && sha256sum -c SHA256SUMS.txt)
 
-三、认准预留的 96 GiB，再抹掉这一个分区
-内置盘是 Micron MTFDKBA512TFH，整盘 512,110,190,592 字节。Ubuntu 的 p1 是 200 MiB EFI，p2 是微软保留，p3 是 Windows，p4 是 Windows 恢复，p5 是 Ubuntu，p6 才是目标。p3 大小也接近 96 GiB，光看容量容易选错。p6 当前为 FAT32，GPT 名为 MacOS，文件系统卷标为空；在苹果界面可能显示 NO NAME 或 diskXs6。macOS 的 disk0、disk1 编号会随启动变化。
+二、先进入恢复环境，确认版本和网络
+1. 重启，出现 Fujitsu 标志时反复轻按 F12；功能键处于多媒体模式时试 Fn+F12。在固件的一次性启动菜单选指向 OnlyDisk / USB HDD 的 UEFI 项。
+2. 在 Ventoy 菜单用方向键选 01-U9311-Sequoia-15.8.3-Install.img，按 Enter。若列表很长，按 F3 进入 TreeView，选 U9311 按 Enter，再选 01。Esc 返回上层。如果另问启动模式，先选普通模式。
+3. 进入黑底 OpenCore Boot Menu 后，用方向键选 Install macOS Sequoia 15.8.3 (dmg) 并按 Enter。按名称找，编号随磁盘数量变化。选到 VTOYEFI 会返回 Ventoy。滚动白字是启动日志。
+4. 到语言选择或 macOS 恢复工具，选简体中文。把鼠标移到屏幕顶部，在“实用工具 → 终端”中逐行输入以下命令，每行按回车。恢复环境的终端可以直接输入命令。
+   sw_vers
+   ls /Volumes
+   第一条应显示 ProductVersion 15.8.3、BuildVersion 24H241。第二条应列出 Ventoy。版本不符就回到上一步重新选入口。
+5. 如果找不到 Ventoy，退出终端，打开“磁盘工具 → 显示 → 显示所有设备”，在外置 OnlyDisk 下选名为 Ventoy 的 exFAT 数据卷，点“装载”。退出磁盘工具再开终端。若卷名有数字后缀，用 ls /Volumes 看到的实际名字替换后面各命令里的 Ventoy，并把含空格的路径放在双引号中。如果只能看到虚拟启动盘，按第七节使用备用 U 盘或回 Ubuntu。
+   手边没有手机时，下面一行用全英文键盘就能在恢复终端读说明。先经过几行文件校验值，然后是本指南。按空格翻页，b 上一页，q 退出。
+   cat /Volumes/Ventoy/U9311/*.txt | less
+6. 检查当前恢复环境能否访问苹果的实际安装文件。输入
+   sh /Volumes/Ventoy/U9311/Tools/check-network.sh
+   显示 PASS 表示成功通过 HTTPS 读到了苹果 15.8.3 安装包的文件头。接下来退出终端，打开“重新安装 macOS Sequoia”或“安装 macOS Sequoia”，点“继续”。可以先走到选择目标卷的页面，然后用“安装 macOS → 退出安装 macOS”回到恢复工具，准备第三节。此时还没有可用的目标 APFS 卷是正常的。
+   显示 CHECK NETWORK 时，检查网线两端、路由器 LAN 口，终端输入 ifconfig 查看有线接口是否有 status: active 和正常的 inet 地址（127.x 和 169.254.x 无法证明已接入路由器），输入 date 核对日期。换网线、换 LAN 口或换可直接上网的有线网络，再试一次。如果是网络代理拦截了小段下载，可用安装器能否顺利联系苹果并进入选盘页进一步判断。若安装器报“无法联系恢复服务器”或显示其他系统，先解决再抹盘。随后下载完整系统还会访问苹果的其他服务。
 
-推荐在恢复终端直接运行 U 盘上的只读核对工具：
-   sh /Volumes/Ventoy/U9311/Tools/check-target.sh
-如果提示找不到文件，先输入 ls /Volumes 查卷名；必要时进入“磁盘工具 → 显示 → 显示所有设备”，选外置 OnlyDisk 的 Ventoy 数据卷并点“装载”。含空格的路径用双引号包围。也可以手动核对：
+三、只把内置盘最后的 FAT32 分区改为 APFS（第一次安装）
+1. 打开恢复终端，先看磁盘清单，再运行随盘的只读核对工具。两行都不会更改分区。
    diskutil list internal physical
-   diskutil info /dev/diskXs6
-第二行中的 X 换成第一行显示的内置 Micron 盘编号。请在抹盘前同时看到：
-   • 位于内置 Micron 的第 6 分区，当前为 Microsoft Basic Data / MS-DOS FAT32；
-   • 精确容量 103,077,117,952 字节，苹果界面通常写 103.1 GB；
-   • Disk / Partition UUID 为 A0315E11-D14A-4AE3-AAE2-B90CD7CD1065。
-只读工具在这些条件匹配时会打印一条 diskutil eraseVolume APFS U9311-Sequoia ... 命令。确认这个分区里的内容可以清空后，手动输入它打印的完整命令。它会创建名为 U9311-Sequoia 的 APFS 卷。没有精确匹配、看到 Physical Store/整盘、或已经是 APFS 时请先停下。脚本只在第一次格式化前使用。
+   sh /Volumes/Ventoy/U9311/Tools/check-target.sh
+2. 内置物理盘是 Micron MTFDKBA512TFH（512,110,190,592 字节）。第 1 分区是 200 MiB EFI，第 2 是微软保留，第 3 是 Windows，第 4 是 Windows 恢复，第 5 是 Ubuntu，第 6 才是本次目标。macOS 的 disk 编号由本次启动决定。核对脚本输出中的三项，并用手机拍下本次的设备号。
+   • 内置物理盘第 6 分区，设备号末尾 s6；格式是 Microsoft Basic Data / MS-DOS FAT32，卷名可能显示 NO NAME。
+   • 大小恰为 103,077,117,952 字节（96 GiB，界面约 103.1 GB）。
+   • Disk / Partition UUID 为 A0315E11-D14A-4AE3-AAE2-B90CD7CD1065。应核对这一栏；FAT 的 Volume UUID 是另一个编号。
+3. 只有看到 “Matched original U9311 FAT partition” 且该分区内容可以全部清空，才执行脚本最后显示的那一行。可选中整行复制粘贴到同一终端，再按回车。开头应是 diskutil eraseVolume APFS U9311-Sequoia，末尾是这次识别的 /dev/disk…s6。执行后该分区原有数据会被清除。若显示“No exact match”、没有列出内置盘，或末尾并非 s6，就停在这里。不要改脚本条件或自行猜设备号。
+4. 等到命令完成，再输入
+   diskutil apfs list
+   在同一个 APFS Container（容器）下确认 Physical Store 使用内置盘刚才核准的第 6 分区，且其中有名为 U9311-Sequoia 的卷。新卷会分配另一个 disk 编号，这是正常的。成功后退出终端。抹盘报错时拍下完整错误和 diskutil list，不要改用“抹掉整盘”或删除别的分区。
+   如果上回已经做过这一步，只用 diskutil list internal physical 和 diskutil apfs list 检查本次内置盘的 s6、容器容量和卷名，直接进行第四节。原 FAT 的识别条件在格式化后已失效。
 
-也可以走图形界面：在“磁盘工具 → 显示 → 显示所有设备”下选刚核准的第 6 个子分区，点“抹掉”，名称 U9311-Sequoia，格式 APFS（普通、非区分大小写、非加密）。若弹出让你重建整个磁盘“方案”的对话框，取消并回到分区层级。遇到错误保留错误原文，切勿从“分区”菜单删除相邻分区。命令行和图形界面任选一种，只做一次。
+四、安装系统及中途重启
+1. 在恢复工具中点“安装 / 重新安装 macOS Sequoia”，点继续、阅读条款。若有“显示所有磁盘”可点开，只选刚核对的 U9311-Sequoia，点“安装”。看到 Tahoe、找不到此卷、只有外置 U 盘或被要求抹整盘时，退出并回到第三节第 4 步查看布局。
+2. 下载和安装时保持电源、网线、U 盘连接，屏幕打开。苹果标志、剩余时间跳动、短暂黑屏和多次重启都可能出现。进度仍在走时让它继续。
+3. 每次自动重启，看到 Fujitsu 标志按 F12，回到 Ventoy 的 01。在 OpenCore 优先选 macOS Installer。这个入口消失后，选 U9311-Sequoia 继续，直到首次设置。OpenCore 会停在菜单等待回车。如果误进 Ubuntu / Windows，正常重启重新选择；如果看到恢复工具，说明回到了 (dmg) 入口，已有安装进度时直接重启按本步继续。
+4. 如果只建好了空 APFS 卷，或下载报错、还没有 macOS Installer 项，就从 01 → (dmg) 回恢复，重新检查网络和第三节第 4 步的卷，再把安装指向同一个 U9311-Sequoia。若安装器已报告准备完成，但 OpenCore 既没有 macOS Installer 也没有系统卷，先按空格显示所有项；仍没有就回恢复查看磁盘和日志，保留现有卷。
+5. 在首次设置中选地区、键盘、创建本地管理员，记住密码。可先跳过 Apple 账户登录；若出现 FileVault 加密选项，可留待验证日常启动后再启用。进入桌面后从“应用程序 → 实用工具 → 终端”运行 sw_vers。目标是 15.8.3 / 24H241。U 盘恢复环境已锁定该构建，在线安装最终交付的小版本仍由苹果决定。桌面显示 15.8.x 才继续第五节；如为其他系列，记录版本，保留现有系统，先不要装这份显卡包。
 
-四、安装到刚建立的 APFS 卷
-1. 关闭终端/退出磁盘工具，选择“重新安装 macOS Sequoia”或“安装 macOS Sequoia”。确认名称是 Sequoia，点击继续、阅读条款后选 U9311-Sequoia。下载和准备阶段一直插网线、电源、U 盘。
-2. 电脑会重启多次。每次从 F12 → Ventoy → 01 进入 OpenCore。首次已经拷贝文件后，优先选择内置盘的“macOS Installer”。这个条目消失后选“U9311-Sequoia”；再次选带 (dmg) 的入口会回到恢复工具。如果固件直接进入 Ubuntu/Windows，重启按 F12 即可。
-3. 完成地区、键盘、用户等设置。建议首次测试先使用本地账户。桌面打开“终端”，运行 sw_vers。目标是 15.8.3 / 24H241。在线安装的最终版本也取决于苹果届时提供的软件，交付时已核实的是 U 盘恢复镜像的确切版本；若安装界面变为 Tahoe、要求额外卷、或服务器称没有可用软件，请记录画面与日志，不要再抹盘。15.8.x 以内才继续显卡步骤。
-
-五、让 Iris Xe 启用 Metal
-1. 正常重启，再次选 U 盘，这次选 02-U9311-Sequoia-Metal.img → OpenCore → 内置的 U9311-Sequoia。02 的身份信息与 01 一致；它已加载 Lilu、AMFIAnchor、证书注入器、WhateverXe，并设置启动参数 -allow3d -disablegfxfirmware。核显使用原始 ID 9A49。
-2. 02 会按驱动要求将 macOS 的 SIP 调整到 0x803，并让系统信任该显卡项目特定签发链。AMFI 保持启用。要采用此驱动，请确认接受这个信任范围。终端执行：
+五、在已装好的 macOS 中启用 Iris Xe / Metal
+1. 正常重启，从 F12 → Ventoy 选 02-U9311-Sequoia-Metal.img → OpenCore → U9311-Sequoia。这次进入的是内置盘的 macOS 桌面。02 配有 Lilu、AMFIAnchor、证书注入器、WhateverXe，参数含 -allow3d -disablegfxfirmware；两套入口使用相同的机器标识。
+2. 02 使用驱动要求的 SIP 设置 0x803，并让 AMFI 信任显卡项目使用的签发链。接受这项更改后，在桌面终端逐行确认实际加载状态。
    nvram csr-active-config
    ioreg -r -c AMFIAnchor -l
-   第二条应看到 InstallStatus 为 1 且 LoadedAnchors 有条目，第一条的字节应对应 03 08 00 00。若不匹配，检查本次是否从 02 启动。
-3. Finder → 位置 → Ventoy → U9311 → Tools，双击 WhateverXe-Graphics-0.4.4.pkg，按提示输入本地管理员密码。这个第三方安装包本身未签名或公证。若系统拦截，可在确认文件和哈希后，到“系统设置 → 隐私与安全性”批准刚尝试打开的这一个包；若提示允许系统扩展，按界面操作。等待显示安装成功，失败时保留 /var/log/install.log 的错误。包将显卡组件放在 /Library 并重建辅助内核缓存。只有成功后再重启，仍用 02 → U9311-Sequoia。
-   项目公布的 SHA-256：
-   f4c2d680a7c52c33a3f038ce6945da0aa2cc044e62b935a52ea046c7c473cfec
-4. “关于本机 → 系统报告 → 图形卡/显示器”查看 Metal 支持，以及内屏 1920×1080。终端也能查询：
+   第一条应对应字节 03 08 00 00（可能写成 %03%08%00%00），第二条应能看到 InstallStatus 为 1、LoadedAnchors 有条目。未满足时重新确认选了 02，先不要运行安装包。
+3. 在桌面终端校验 U 盘里的显卡包。
+   shasum -a 256 /Volumes/Ventoy/U9311/Tools/WhateverXe-Graphics-0.4.4.pkg
+   输出最前面的 64 位应为 f4c2d680a7c52c33a3f038ce6945da0aa2cc044e62b935a52ea046c7c473cfec。不同就停止。
+4. 在 Finder 左边点 Ventoy → U9311 → Tools，双击 WhateverXe-Graphics-0.4.4.pkg，按提示输入本地管理员密码。该第三方 pkg 未签名或公证，内含的图形组件由项目信任链签名。若被拦截，核准哈希后到“系统设置 → 隐私与安全性”，只批准刚尝试打开的这个包。若系统要求批准驱动，按界面确认。等待明确显示安装成功，正常重启，再用 02 → U9311-Sequoia。安装失败先保留 /var/log/install.log 的错误，勿反复重启尝试。
+5. 桌面终端运行
    system_profiler SPDisplaysDataType
-   仅显示 Iris Xe 名称、显存容量或正常分辨率，都不足以确认加速。已经安装 Xcode Command Line Tools 时，可再运行：
+   在内屏对应显卡下查看 Metal 支持、1920×1080 分辨率。仅显示 Iris Xe 名称或分辨率不足以确认加速。如果已装 Xcode 命令行工具，可再运行
    xcrun swift /Volumes/Ventoy/U9311/Tools/MetalCheck.swift
-   出现 PASS 和 GPU result = 42 表示实际提交了一次 Metal 计算并读回了结果。再分别实测动画、内屏亮度和视频播放。若是 02 后黑屏，先拔外接屏，在 F12 用 01 引导内置系统，再查看日志。需要卸载图形包时，在可以进入的 macOS 中运行项目卸载程序 sudo bash /Volumes/Ventoy/U9311/Tools/uninstall-graphics.sh，等成功后重启。
-5. 02 已放入 AX201 对应的 itlwm。要连 Wi-Fi，打开 Tools/HeliPort.dmg，把 HeliPort 拖到“应用程序”后运行，从其菜单栏图标选网络。保留有线作为回退。声卡是 ALC255，起始采用 AppleALC 的笔记本 layout 3；扬声器、耳机和麦克风要逐项试。板载蓝牙、I2C 触控板、USB-C 显示热插拔、睡眠和唤醒仍需这台真机验证。首次测试前保存工作。
+   输出 PASS 和 GPU result = 42 表示显卡实际执行了一次 Metal 计算。没有开发工具可以先用系统报告，再试桌面动画、亮度和视频播放。
+6. 若用 02 后黑屏，拔外接显示器，试 F12 → Ventoy → 01 → 内置的 U9311-Sequoia。能回到已安装的 macOS 桌面且决定撤回图形包时，在桌面终端运行下行，成功后再重启。卸载程序会处理当前运行系统的图形文件，所以仅从已安装的 macOS 桌面执行。
+   sudo bash /Volumes/Ventoy/U9311/Tools/uninstall-graphics.sh
+   如果两种入口都进不了桌面，保留原卷，按第七节回 Ubuntu。
+7. 测试 Wi-Fi 时用 02 启动，在 Tools 双击 HeliPort.dmg，把 HeliPort 拖到“应用程序”后打开，从其菜单栏图标选网络。保留有线作为回退。ALC255 声卡已配置 AppleALC layout 3，可分别试扬声器、耳机和麦克风。蓝牙、I2C 触控板、USB-C 显示、睡眠和唤醒都要在本机实测；睡眠测试前保存工作。
 
-六、三系统日常启动和返回原系统
-继续插 U 盘用 02 启动 macOS 即可。Ubuntu、Windows 请从原来的 F12 启动项或原 GRUB 菜单启动。拔 U 盘后仍可选 Ubuntu 或 Windows Boot Manager。先确认 macOS 能多次冷启动，再考虑把 OpenCore 放进内置 EFI。
-可选的免 U 盘启动方法（在 Ubuntu 中做）：
-  1. 打开终端，输入 cd /home/hengliu/workspace/u9311-macos-install。用 findmnt /boot/efi 确认来源是 nvme0n1p1。下列命令只适用于内置 EFI 下还没有 OC 目录的情况：
-     sudo test ! -e /boot/efi/EFI/OC && sudo cp -r EFI/OC /boot/efi/EFI/
-  2. 新增一个 GRUB 菜单项。当前准备时 /boot/grub/custom.cfg 尚不存在，先确认上一步成功，再执行：
-     sudo test -f /boot/efi/EFI/OC/OpenCore.efi && sudo test ! -e /boot/grub/custom.cfg && sudo install -m 0644 U9311-Tools/macos-grub-entry.cfg /boot/grub/custom.cfg
-     如果以后该文件已存在，先打开检查并保留原有菜单项，仅追加本包中的 menuentry 一次。Ubuntu 默认的 41_custom 会加载 custom.cfg；若 GRUB 隐藏，可在选择 Ubuntu 后轻按 Esc。先保留 U 盘作为备用。
-  3. 以后选 GRUB 中的“macOS Sequoia (OpenCore U9311)”再选苹果系统；Windows/Ubuntu 仍用各自原有入口。撤销这个选择时，只移除新增的 GRUB 菜单项。无需重装 GRUB、改 NVRAM 启动顺序或替换 EFI/BOOT。
+六、正常使用三系统（免 U 盘启动可稍后再做）
+日常使用 macOS 可一直从 Ventoy 的 02 启动。回原系统时，等安装器结束写入，正常关机，拔 U 盘，开机按 F12 选 Ubuntu 或 Windows Boot Manager。先分别验证它们能启动。能稳定冷启动 macOS 后，如希望拔掉 U 盘也能从 GRUB 选择 macOS，再做以下可选步骤。
 
-七、出错时保留哪些信息
-• 看不见 U 盘时，确认用同一个 USB-A 口，关机后再插，F12 查看 USB HDD。Ventoy 菜单可用 F2 浏览数据分区的 U9311 目录。
-• 只有 U9311INST 或 VTOYEFI 时，在 OpenCore 菜单按空格，看带 (dmg) 的项。已经准备的标准 FAT32 备用目录在 Ubuntu 工作区 Install 下，里面同时有 EFI 和 com.apple.recovery.boot。若特定固件不接受 Ventoy 虚拟磁盘，可把这两个目录复制到另一支已备份、空白的 FAT32 U 盘根目录，直接 UEFI 启动。原 Ventoy 盘继续保存 Tools。
-• 出现禁止符号或“Still waiting for root device”，先用原 USB-A 口启动，去掉集线器。黑屏或卡白字时拍下最后一整屏，保留停在哪个菜单、是否接显示器、选了 01 还是 02。进入恢复后，可用“窗口 → 安装器日志”（若提供）或终端 tail -100 /var/log/install.log 查看报错。
-• 看不到 Micron / 目标分区、容量或 UUID 不符、显示 MediaKit 空间错误，记录 diskutil list 和 diskutil info 的输出后停止。已有系统下切换 VMD/RAID、抹整盘或重置 NVRAM 都会增加恢复工作。
-• 如需修复原有引导，U 盘 Backup/EFI-before-install.tar.gz 内有原 EFI/Microsoft、EFI/ubuntu、EFI/Boot 及厂商文件。优先从 F12 直接选原有入口；按实际损坏文件恢复，保留当前可用启动项。分区清单和 EFI 文件备份不能恢复已误擦的个人数据。
+1. 进入本机原来的 Ubuntu，打开终端，输入
+   cd /home/hengliu/workspace/u9311-macos-install
+   findmnt -nro SOURCE,UUID --mountpoint /boot/efi
+   必须看到 /dev/nvme0n1p1 和 1061-4E5B；工作目录要有本机生成的 EFI/OC/config.plist。先确认 U 盘 Backup 的引导备份仍在。挂载来源不同、没有挂载或配置文件缺失，就继续用 U 盘启动。
+2. 下面一行仅在内置 EFI 尚无 OC 目录时复制。下一行比较复制后的所有文件；无输出且成功才做第 3 步。
+   test -s EFI/OC/config.plist && sudo test ! -e /boot/efi/EFI/OC && sudo cp -r EFI/OC /boot/efi/EFI/
+   sudo diff -qr EFI/OC /boot/efi/EFI/OC
+   如 OC 已经存在且文件不同，保留它，继续使用 U 盘。复制失败或提示空间不足时也到此停下。
+3. 将新增 GRUB 菜单写到本机的 custom.cfg。Ubuntu 的 41_custom 会自动加载它。输入
+   sudo test -f /boot/efi/EFI/OC/OpenCore.efi && sudo test ! -e /boot/grub/custom.cfg && sudo install -m 0644 U9311-Tools/macos-grub-entry.cfg /boot/grub/custom.cfg
+   sudo cat /boot/grub/custom.cfg
+   应能看到名为 macOS Sequoia (OpenCore U9311) 的 menuentry。如果 custom.cfg 已有别的条目，上面的写入会自动跳过；保留原文件，继续用 U 盘或手动只追加本包的 menuentry 一次。
+4. 正常重启，F12 选择 Ubuntu。GRUB 菜单隐藏时，在进入 Ubuntu 引导项后轻按 Esc。选 macOS Sequoia (OpenCore U9311)，再选 U9311-Sequoia。Windows 和 Ubuntu 继续用各自原入口。撤销时只移除新增的 GRUB 菜单项。保留 Ventoy 盘备用。
 
-选择 Sequoia 的依据
-WhateverXe 当前支持 Sequoia 15.8.x 和 Tahoe 26.7 及以上，9A49 在驱动列表中。上游分别测过 Tiger Lake 的 80 EU 配置和笔记本 eDP；另有 i5-1145G7 / 9A49 / 1080p 笔记本在 15.8.2 的实机记录。富士通这块主板与内屏仍有自己的差异。Sequoia 保留 AppleHDA，可以直接尝试 AppleALC 驱动本机 ALC255；Tahoe 移除了这条音频路径。对于这台机器的第一次三系统安装，15.8.x 减少了一个需要另行处理的硬件问题。USB-C 重连与睡眠仍属项目已知限制。
+七、卡住时按所处位置处理
+• F12 没有 USB：正常关机，换回原 USB-A 口直接插入，只留安装用 U 盘，再开机按 F12。Ventoy 列表没有 01 时，按 F3 → U9311。文件夹和菜单都没有这两个 IMG 时，在 Ubuntu 核对第一节的文件清单。
+• OpenCore 只有 U9311INST / VTOYEFI：确认在 01，按空格查看带 (dmg) 的项。若固件不能使用 Ventoy 虚拟盘，可在 Ubuntu 的工作目录 Install 里，将 EFI 和 com.apple.recovery.boot 两个完整目录复制到另一支已经备份、空白、支持 UEFI 启动的 FAT32 U 盘根目录。再在备用盘新建 U9311 文件夹，从原 Ventoy 盘的 U9311 中把 Tools 整个文件夹和安装说明.txt 复制进去。在恢复终端用 ls /Volumes 找到备用盘的卷名，替换各条命令里的 Ventoy。F12 选择备用盘可直接进 OpenCore；安装到首次桌面期间，每次从备用盘选与 01 相同的苹果条目。到第五节再用原 Ventoy 的 02。
+• 禁止符号、Still waiting for root device、黑屏或反复重启：先用内屏、原 USB-A 口，去掉集线器。拍下最后一整屏和当时选择的入口。若还在恢复界面，可正常关机回 Ubuntu；若已开始下载或写入，优先等进度或明确的错误，避免中途断电拔盘。
+• 下载失败或安装器说无法联系服务器：先回第二节联网检查。安装器仍开着时可从“窗口 → 安装器日志”或按 Command+L（通常是 PC 键盘的 Windows 键 + L）查看，选“显示所有日志”；恢复终端也可输入 tail -100 /var/log/install.log。拍下第一条具体错误及时间。要保存当前日志到 U 盘，在恢复终端输入
+   cp /var/log/install.log /Volumes/Ventoy/U9311/install-recovery.log
+   先保存再重启，同名日志会被后一次复制替换。
+• 看不到 Micron、目标 UUID 或容量不符、报 MediaKit 空间错误：拍下 diskutil list 和 diskutil apfs list。不要改动分区或切换 BIOS 存储模式。若出现 Windows 的 BitLocker 恢复画面，用第一节提前保存的恢复密钥。
+• 原系统启动菜单有变化：先用 F12 直接选 Ubuntu 或 Windows Boot Manager。Backup/EFI-before-install.tar.gz 有原 EFI/Microsoft、EFI/ubuntu、EFI/Boot 和厂商文件，Backup/efi-boot-order.txt 有原启动项。保留还可用的入口，避免整目录覆盖或重置 NVRAM。
 
-参考
+为什么选 Sequoia 15.8.x
+WhateverXe 的图形包支持 Sequoia 15.8.x 和 Tahoe 26.7 及以上，9A49 在驱动列表中。上游分别验证过 Tiger Lake 80 EU 和笔记本内屏 eDP，另有同款 i5-1145G7 / 9A49 / 1080p 笔记本在 15.8.2 的实机记录。Sequoia 可用 AppleHDA 配合 AppleALC 驱动本机 ALC255；Tahoe 移除了这条音频路径。本机 GGC 实测 02c1，对应显存预留 64 MiB；上游建议 BIOS 可选时设 96 MB。这里沿用本机现有设置。模拟引导已到苹果启动程序向 XNU 内核交接；本机进入恢复界面、装到桌面、网卡及 Metal 表现仍以实机为准。
+
+参考资料（安装时不用打开）
+Ventoy 的 F3 目录菜单  https://www.ventoy.net/en/doc_treeview.html
+OpenCore 安装和重启  https://dortania.github.io/OpenCore-Install-Guide/installation/installation-process.html
+苹果恢复安装与网络要求  https://support.apple.com/zh-cn/102655
 WhateverXe 与测试范围  https://github.com/b00t0x/WhateverXe
-WhateverXe Graphics 安装、签名、卸载  https://github.com/b00t0x/WhateverXe-Graphics
-AMFIAnchor 信任范围  https://github.com/b00t0x/AMFIAnchor
+显卡包安装、签名、卸载  https://github.com/b00t0x/WhateverXe-Graphics
+AMFIAnchor 信任设置  https://github.com/b00t0x/AMFIAnchor
 同 CPU 和核显的实测  https://github.com/tiwarisatyadeep/Dell_Latitude_5420_EFI
 Tahoe 的音频变化  https://dortania.github.io/OpenCore-Install-Guide/extras/tahoe.html
-苹果 15.8.3 完整安装包（本套恢复镜像来源）  https://swcdn.apple.com/content/downloads/35/30/142-54123-A_L1FDSOKH17/4v632s6ip8ranyhu7hc09akv6d5239x9tq/InstallAssistant.pkg
-OpenCore 的 Linux 恢复盘布局  https://dortania.github.io/OpenCore-Install-Guide/installer-guide/linux-install.html
+恢复镜像与驱动的下载地址及 SHA-256 见随盘 Tools/来源与校验.txt。
