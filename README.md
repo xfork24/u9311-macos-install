@@ -10,10 +10,10 @@
 | `EFI/` | 进入桌面后的 Metal 入口，搭配 WhateverXe 0.8.3 和 Graphics 0.4.4 |
 | `ACPI-source/` | 根据本机固件编写的 SSDT 源码 |
 | `U9311-Tools/` | 苹果下载连通性检查、分区核对、Metal 验证、GRUB 入口、驱动卸载、上游下载地址和哈希 |
-| `Media/SHA256SUMS.txt` | 最初写入 Ventoy 的两份镜像的校验值 |
-| `Ventoy-SHA256SUMS.txt` | 本次交付到这支 U 盘的完整清单，与盘上 `U9311/SHA256SUMS.txt` 内容一致 |
+| `Media/SHA256SUMS.txt` | 早期 Ventoy 实验镜像的校验值 |
+| `Ventoy-SHA256SUMS.txt` | 早期 Ventoy 介质的校验清单。当前导出包使用包内的 `SHA256SUMS.txt` |
 
-在本机 Ubuntu 核对整支安装盘时，可从仓库目录运行下面两行。第一行比对清单，第二行实际读取两份镜像、工具、说明和备份。仓库用模板保存配置，用下载地址和校验值标识苹果镜像及第三方安装包。本机的 SMBIOS 标识和原引导备份保存在本机及 U 盘。
+在 Ubuntu 核对早期 Ventoy 介质时，可从仓库目录运行下面两行。第一行比对清单，第二行实际读取两份镜像、工具、说明和备份。仓库用模板保存配置，用下载地址和校验值标识苹果镜像及第三方安装包。本机的 SMBIOS 标识和原引导备份保存在本机及 U 盘。
 
 ```sh
 cmp Ventoy-SHA256SUMS.txt /media/hengliu/Ventoy/U9311/SHA256SUMS.txt
@@ -88,6 +88,6 @@ python3 tools/build-direct-usb.py desktop /tmp/U9311-03Q-EFI --trackpad-buttons 
 
 桌面入口使用 WhateverXe 的 eDP 速率表修复。Wi-Fi 从 HeliPort 菜单连接，连接时勾选“记住此网络”，安装 HeliPort 后以桌面用户运行 `sh U9311-Tools/enable-heliport.sh`，使 HeliPort 随登录启动并隐藏系统无线菜单。[显卡修复源码](https://github.com/Karthik1268/WhateverXe/commit/d1bc03d25ea2c8adc6660172cca455fa138b9eb6) · [itlwm 使用说明](https://openintelwireless.github.io/itlwm/FAQ.html)
 
-这支普通 U 盘接回制作盘的 Mac 后，运行 `python3 tools/sync-usb.py`。新克隆首次同步时加上 `--identify 数据分区的GPT标识 EFI分区的GPT标识`，两个值取自 `diskutil info` 的 Disk / Partition UUID，并保存在本机的忽略目录。脚本按 GPT 分区标识确认目标，回收盘上独有的安装工具，并逐文件校验备份内容。项目工具和说明以仓库为准。EFI 文件树、IMG、配置和项目工具在本机 `backup/USB-U9311/` 与普通盘 `U9311/` 各有一份，启动备份在各自的 `Backup/BootFiles/`。发生覆盖时保留旧版本。 数据卷的历史版本会回收到本机；同步范围还包括 ACPI 源码、安装恢复文件、驱动构建材料和实机诊断记录。实机确认的通用改动进入 Git，个性化 SMBIOS、整盘镜像、现场日志留在本机与普通盘。
+普通 U 盘接回制作盘的 Mac 后，运行 `python3 tools/sync-usb.py`。新克隆首次同步时加上 `--identify 数据分区的GPT标识 EFI分区的GPT标识`，两个值取自 `diskutil info` 的 Disk / Partition UUID。脚本核对分区身份，同步 01F 安装包、03W 日用引导和通过实机验证的内置三系统 EFI，并从 U 盘上的苹果安装文件重新计算完整离线镜像的 SHA-256。制作盘的 `backup/Ventoy导出/U9311/` 可直接复制到 Ventoy，`backup/USB-U9311/` 与普通安装 U 盘的 `U9311/` 存放相同的恢复文件和校验清单。[备份目录说明](U9311-Tools/备份目录说明.txt)
 
 在 U9311/F 上，HeliPort 1.5.0 有过连接超时后仍未记住网络的情况。本机验证的补丁会在用户勾选「记住此网络」后立即把凭据写入登录钥匙串，只有不含密码的网络元数据进入备注。连接确认最多等待 120 秒。补丁可在官方 1.5.0 源码根目录用 `git apply /path/to/remember-network.patch` 应用，再以 Xcode 构建 HeliPort scheme 的 macOS Release 版本。实测重启进入桌面后，无需输入密码即可自动联网。 [HeliPort 补丁](DirectUSB/HeliPort/remember-network.patch) · [原版源码](https://github.com/OpenIntelWireless/HeliPort/tree/v1.5.0)

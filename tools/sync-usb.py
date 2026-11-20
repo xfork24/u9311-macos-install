@@ -1,11 +1,15 @@
 """Back up the U9311 project on this Mac and its identified installer USB."""
 import argparse
-import datetime
 import fcntl
+import hashlib
+import json
 import os
 from pathlib import Path
 import plistlib
 import subprocess
+import shutil
+import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -30,25 +34,127 @@ def usb_payload(data_uuid, efi_uuid):
     return folder
 
 
-def copy_and_check(source, target, history, excludes=()):
-    target.mkdir(parents=True, exist_ok=True)
-    # No --delete. Keep older contents when a file changes on either replica.
-    common = ["rsync", "-rltpc", "--exclude", "._*", "--exclude", ".DS_Store"]
-    for pattern in excludes:
-        common.extend(["--exclude", pattern])
-    src = str(source) + ("/" if source.is_dir() else "")
-    paths = [src, str(target) + "/"]
-    subprocess.run(common + ["--backup", "--backup-dir=" + str(history)] + paths, check=True)
-    pending = subprocess.check_output(common + ["-ni", "--out-format=%i %n"] + paths, text=True)
-    if any(line and not line.startswith((".d", "cd")) for line in pending.splitlines()):
-        raise RuntimeError(f"Read-back mismatch for {target}: {pending[:400]}")
+INTERNAL = Path("Backup/InternalBoot/20261120-220252-FAT-names")
+VENTOY = Path("Backup/Ventoy-Export")
+COMPACT = VENTOY / "Offline-IMG"
+PACKAGE = VENTOY / "U9311"
+SUMS = "SHA256SUMS.txt"
 
 
-def copy_missing(source, target):
-    if source.is_dir():
-        target.mkdir(parents=True, exist_ok=True)
-        subprocess.run(["rsync", "-rltp", "--ignore-existing", "--exclude", "._*", "--exclude", ".DS_Store",
-                        str(source) + "/", str(target) + "/"], check=True)
+def digest(path):
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def manifest(path):
+    entries = {}
+    for line in path.read_text().splitlines():
+        checksum, name = line.split("  ", 1)
+        item = Path(name)
+        if (len(checksum) != 64 or any(c not in "0123456789abcdef" for c in checksum)
+                or item.is_absolute() or ".." in item.parts or name in entries):
+            raise ValueError(f"Invalid checksum entry in {path}")
+        entries[name] = checksum
+    if not entries:
+        raise ValueError(f"Empty checksum file: {path}")
+    return entries
+
+
+def existing(*paths):
+    for path in paths:
+        if path.is_file():
+            return path
+    raise FileNotFoundError(paths[0])
+
+
+def store_file(source, target, expected):
+    if source == target or (target.is_file() and digest(target) == expected):
+        return
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=target.parent, prefix=".sync-", delete=False) as tmp:
+        temp = Path(tmp.name)
+    try:
+        shutil.copy2(source, temp)
+        if digest(temp) != expected:
+            raise OSError(f"Checksum mismatch for {source}")
+        temp.replace(target)
+    finally:
+        temp.unlink(missing_ok=True)
+
+
+def synchronize(backup, usb):
+    mirror = backup / "USB-U9311"
+    export = backup / "Ventoy导出/U9311"
+    entries = {}
+
+    def copy_item(relative, expected=None, preferred=None, export_path=None):
+        sources = [mirror / relative, usb / relative]
+        if preferred is not None:
+            sources.insert(0, preferred)
+        if expected is None:
+            source = existing(*sources)
+            expected = digest(source)
+        else:
+            source = next((p for p in sources if p.is_file() and digest(p) == expected), None)
+            if source is None:
+                raise ValueError(f"No verified copy of {relative}")
+        for base in (mirror, usb):
+            store_file(source, base / relative, expected)
+        if export_path is not None:
+            store_file(source, export_path, expected)
+        entries[relative.as_posix()] = expected
+
+    # The full offline IMG is already present on the USB as reconstructible extents.
+    sums = existing(export / SUMS, mirror / PACKAGE / SUMS, usb / PACKAGE / SUMS)
+    package = manifest(sums)
+    failures = []
+    for base in (mirror, usb):
+        compact = base / COMPACT
+        try:
+            layout = json.loads((compact / "layout.json").read_text())
+            offline = layout["image"]
+            if offline not in package or package[offline] != layout["sha256"]:
+                raise ValueError("offline IMG checksum differs from export manifest")
+            subprocess.run([sys.executable, str(ROOT / "tools/restore-offline-img.py"),
+                            str(compact), str(usb.parent)], check=True)
+            break
+        except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
+            failures.append(f"{compact}: {error}")
+    else:
+        raise ValueError("No valid offline backup: " + ", ".join(failures))
+    image = export / offline
+    if not image.is_file() or digest(image) != package[offline]:
+        export.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=export) as work:
+            temp = Path(work) / "offline.img"
+            subprocess.run([sys.executable, str(ROOT / "tools/restore-offline-img.py"),
+                            str(compact), str(usb.parent), "--output", str(temp)], check=True)
+            temp.replace(image)
+
+    for name in ("layout.json", "remaining-bytes.gz"):
+        copy_item(COMPACT / name, digest(compact / name), compact / name)
+    copy_item(COMPACT / "restore-offline-img.py", preferred=ROOT / "tools/restore-offline-img.py")
+    for name, checksum in package.items():
+        if name != offline:
+            copy_item(PACKAGE / name, checksum, export / name, export / name)
+    copy_item(PACKAGE / SUMS, preferred=sums, export_path=export / SUMS)
+
+    for name, prefix in (("esp-after.img.sha256", INTERNAL), ("profile.sha256", INTERNAL / "U9311Mac")):
+        listing = existing(mirror / INTERNAL / name, usb / INTERNAL / name)
+        for member, checksum in manifest(listing).items():
+            copy_item(prefix / member, checksum)
+        copy_item(INTERNAL / name, preferred=listing)
+    grub = mirror / PACKAGE / "Tools/03W-grub.cfg"
+    copy_item(INTERNAL / "grub-custom.cfg", digest(grub), grub)
+    copy_item(Path("使用说明.txt"), preferred=ROOT / "U9311-Tools/备份目录说明.txt")
+
+    listing = "".join(f"{checksum}  {name}\n" for name, checksum in sorted(entries.items()))
+    with tempfile.TemporaryDirectory(dir=backup) as work:
+        source = Path(work) / SUMS
+        source.write_text(listing)
+        for base in (mirror, usb):
+            store_file(source, base / SUMS, digest(source))
+    print(f"Verified {len(entries)} files in {mirror} and {usb}", flush=True)
 
 
 def main():
@@ -72,36 +178,9 @@ def main():
         usb = usb_payload(*ids)
         if args.identify:
             ids_file.write_text("\n".join(ids) + "\n")
-        stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-%f")
-        local_history = backup / "history" / stamp
-        usb_history = usb / "Backup" / "Previous" / stamp
-        # USB-only tools and recovery files belong on the local copy as well.
-        copy_and_check(usb, mirror, local_history / "usb", ("/Backup/BootFiles/", "/Backup/Previous/"))
-        bootfiles = mirror / "Backup" / "BootFiles"
-        copy_missing(usb / "Backup" / "BootFiles", bootfiles)
-        for relative in ("EFI", "Install", "DirectUSB", "ACPI-source", "tools", "Media", "dist"):
-            source = ROOT / relative
-            if source.is_dir():
-                copy_and_check(source, bootfiles / relative, local_history / "boot" / relative,
-                               ("__pycache__/",))
-        copy_and_check(ROOT / "Ventoy-SHA256SUMS.txt", bootfiles, local_history / "boot")
-        for relative in ("build-sources", "diagnostics"):
-            if (backup / relative).is_dir():
-                copy_and_check(backup / relative, mirror / "Backup" / relative, local_history / relative)
-        for source in [ROOT / "U9311-Tools", ROOT / "安装说明.txt", ROOT / "README.md"]:
-            destination = mirror / "Tools" if source.is_dir() else mirror
-            copy_and_check(source, destination, local_history / "published" / destination.name)
+        synchronize(backup, usb)
         if usb_payload(*ids) != usb:
             raise RuntimeError("The installer USB mount changed during backup.")
-        copy_missing(backup / "history", mirror / "Backup" / "LocalHistory")
-        copy_and_check(mirror, usb, usb_history, ("/Backup/Previous/",))
-        # This run may have just created new historical copies on the USB.
-        local_previous = mirror / "Backup" / "Previous"
-        usb_previous = usb / "Backup" / "Previous"
-        copy_missing(local_previous, usb_previous)
-        if usb_previous.is_dir():
-            copy_and_check(usb_previous, local_previous, local_history / "previous")
-        print(f"Verified local and USB project copies:\n{mirror}\n{usb}", flush=True)
 
 
 if __name__ == "__main__":

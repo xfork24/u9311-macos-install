@@ -1,0 +1,12 @@
+富士通 U9311/F · 最终安装与启动备份
+
+制作盘 Mac 的 backup 目录
+• Ventoy导出/U9311　可直接复制到 Ventoy 数据分区。01F 用来安装 Sequoia 15.8.3，03W 用来启动安装好的 MacOS。复制后进入这个目录执行 shasum -a 256 -c SHA256SUMS.txt。
+• USB-U9311　普通安装 U 盘上 U9311 目录的本地副本。
+• usb-partition-ids　同步工具用来识别普通 U 盘的数据分区和 EFI 分区。
+
+普通安装 U 盘的 U9311 目录与本地 USB-U9311 目录
+• Backup/Ventoy-Export/U9311　两份 EFI 压缩包、联网恢复镜像、03W 日用引导镜像和配套工具。完整离线 IMG 在制作盘 Mac 的 Ventoy导出/U9311。
+• Backup/Ventoy-Export/Offline-IMG　离线镜像的还原工具、布局及补充数据。配合这支 U 盘根目录的苹果安装文件，可还原相同的 19 GiB IMG。完整命令见 Backup/Ventoy-Export/U9311/使用说明.txt。
+• Backup/InternalBoot/20261120-220252-FAT-names　富士通从内置盘成功启动三系统后留存的配置。esp-after.img 是整个共享 EFI 分区，包含 Windows、Ubuntu、macOS 启动文件。U9311Mac 是可单独恢复的 03W 目录，grub-custom.cfg 是验证通过的 GRUB 菜单项。
+• SHA256SUMS.txt　进入当前目录运行 shasum -a 256 -c SHA256SUMS.txt，可逐项检查备份。要核验整个离线 IMG，还需按上述说明运行还原工具。

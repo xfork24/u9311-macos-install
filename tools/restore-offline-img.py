@@ -51,7 +51,7 @@ def restore(backup, installer, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("backup", type=Path, help="directory containing layout.json and remaining-bytes.gz")
-    parser.add_argument("installer", type=Path, help="root of the ordinary installer USB or backup/OfflineInstaller")
+    parser.add_argument("installer", type=Path, help="root of the ordinary installer USB or a mounted full installer image")
     parser.add_argument("--output", type=Path, help="new IMG path; omit to verify without writing a file")
     args = parser.parse_args()
     if args.output:
