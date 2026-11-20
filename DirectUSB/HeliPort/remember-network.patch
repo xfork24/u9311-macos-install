@@ -1,0 +1,79 @@
+--- a/ClientKit/Api.c
++++ b/ClientKit/Api.c
+@@ -136,15 +136,16 @@
+         goto error;
+     }
+ 
+-    int timeout = 20;
++    int timeout = 120;
+     while (timeout-- > 0) {
+         // Sleep first to wait for state to change
+         sleep(1);
+         uint32_t state;
+         if (get_80211_state(&state) && state == ITL80211_S_RUN) {
+             station_info_t sta_info;
+-            if (get_station_info(&sta_info) == KERN_SUCCESS) {
+-                return strncmp(ssid, (char*)sta_info.ssid, NWID_LEN) == 0;
++            if (get_station_info(&sta_info) == KERN_SUCCESS &&
++                strncmp(ssid, (char*)sta_info.ssid, NWID_LEN) == 0) {
++                return true;
+             }
+         }
+     }
+--- a/HeliPort/CredentialsManager.swift
++++ b/HeliPort/CredentialsManager.swift
+@@ -25,18 +25,13 @@
+         keychain = Keychain(service: Bundle.main.bundleIdentifier!)
+     }
+ 
+-    func save(_ network: NetworkInfo) {
+-        guard let networkAuthJson = try? String(decoding: JSONEncoder().encode(network.auth), as: UTF8.self) else {
+-            return
+-        }
+-        network.auth = NetworkAuth()
+-        let entity = NetworkInfoStorageEntity(network)
+-        guard let entityJson = try? String(decoding: JSONEncoder().encode(entity), as: UTF8.self) else {
+-            return
+-        }
+-
+-        Log.debug("Saving password for network \(network.ssid)")
+-        try? keychain.comment(entityJson).set(networkAuthJson, key: network.keychainKey)
++    func save(_ network: NetworkInfo) throws {
++        let auth = try JSONEncoder().encode(network.auth)
++        let networkMetadata = NetworkInfo(ssid: network.ssid, rssi: network.rssi)
++        let metadata = try JSONEncoder().encode(NetworkInfoStorageEntity(networkMetadata))
++        try keychain.comment(String(decoding: metadata, as: UTF8.self))
++            .set(String(decoding: auth, as: UTF8.self), key: network.keychainKey)
++        Log.debug("Saved the requested network to the login keychain")
+     }
+ 
+     func get(_ network: NetworkInfo) -> NetworkAuth? {
+--- a/HeliPort/NetworkManager.swift
++++ b/HeliPort/NetworkManager.swift
+@@ -39,14 +39,21 @@
+ 
+         let getAuthInfoCallback: (_ auth: NetworkAuth, _ savePassword: Bool) -> Void = { auth, savePassword in
+             DispatchQueue.global(qos: .background).async {
++                if savePassword {
++                    do {
++                        try CredentialsManager.instance.save(networkInfo)
++                    } catch {
++                        let code = (error as NSError).code
++                        Log.error("Could not save the Wi-Fi network in the keychain (error \(code))")
++                        DispatchQueue.main.async {
++                            Alert(text: NSLocalizedString("Could not save the Wi-Fi network in the keychain.", comment: "") + " (\(code))").show()
++                        }
++                    }
++                }
+                 StatusBarIcon.connecting()
+                 let result = connect_network(networkInfo.ssid, auth.password)
+                 DispatchQueue.main.async {
+-                    if result {
+-                        if savePassword {
+-                            CredentialsManager.instance.save(networkInfo)
+-                        }
+-                    } else {
++                    if !result {
+                         Log.error("Failed to connect to: \(networkInfo.ssid)")
+                     }
+                     callback?(result)
