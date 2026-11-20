@@ -1,6 +1,7 @@
 """Build a U9311 direct-boot EFI in a new directory, without touching a disk."""
 import argparse
 import hashlib
+import io
 from pathlib import Path
 import plistlib
 import shutil
@@ -25,8 +26,8 @@ def verified(data, expected):
 def build(args, target):
     daily = args.profile == "desktop"
     trackpad = ROOT / "DirectUSB/VoodooI2CHID.kext" if args.trackpad_buttons else None
-    if trackpad and not daily:
-        raise ValueError("The trackpad override requires the desktop profile.")
+    if (trackpad or args.brightness_keys) and not daily:
+        raise ValueError("Input and brightness options require the desktop profile.")
     source = ROOT / ("EFI/OC" if daily else "Install/EFI/OC")
     # make-config.py supplies the same machine identity for both profiles.
     config = plistlib.loads((source / "config.plist").read_bytes())
@@ -61,6 +62,19 @@ def build(args, target):
             shutil.copytree(trackpad, target / "OC/Kexts/VoodooI2CHID.kext",
                             ignore=shutil.ignore_patterns("_CodeSignature", ".*"))
             args_list.append("-vi2c-force-polling")
+        if args.brightness_keys:
+            archive = verified(args.brightness_keys.read_bytes(),
+                               "c9a80f6275e39c18886087a70ba0fe615ce45f83b7afa254b74335f7a92b8544")
+            with zipfile.ZipFile(io.BytesIO(archive)) as z:
+                for name in ("Contents/Info.plist", "Contents/MacOS/BrightnessKeys"):
+                    path = Path("BrightnessKeys.kext") / name
+                    dest = target / "OC/Kexts" / path
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    dest.write_bytes(z.read(path.as_posix()))
+            entry = next(e.copy() for e in config["Kernel"]["Add"] if e["BundlePath"] == "Lilu.kext")
+            entry.update(BundlePath="BrightnessKeys.kext", ExecutablePath="Contents/MacOS/BrightnessKeys",
+                         Comment="U9311 LCD brightness keys")
+            config["Kernel"]["Add"].append(entry)
         nv["boot-args"] = " ".join(args_list)
         kext = ROOT / "DirectUSB/WhateverXe.kext"
         verified((kext / "Contents/MacOS/WhateverXe").read_bytes(), "7c024a69c5898f8f297e6ef28c60936ebba973337e2470a0a5d0819090359e94")
@@ -77,6 +91,7 @@ if __name__ == "__main__":
     parser.add_argument("--opencore", type=Path, required=True, help="OpenCore-1.0.8-DEBUG.zip")
     parser.add_argument("--apfs", type=Path, default=ROOT / "Install/EFI/OC/Drivers/apfs.efi")
     parser.add_argument("--trackpad-buttons", action="store_true", help="use the U9311 03Q physical-button driver")
+    parser.add_argument("--brightness-keys", type=Path, metavar="ZIP", help="BrightnessKeys-1.0.3-RELEASE.zip")
     args = parser.parse_args()
     if args.output.exists():
         parser.error("Choose a new output directory.")

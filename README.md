@@ -66,8 +66,10 @@ python3 tools/build-direct-usb.py desktop /tmp/U9311-03Q-EFI --trackpad-buttons 
 
 03Q 使用 VoodooI2CHID 上游的按键上报修复，空闲轮询间隔为 8 ms，活动时为 2 ms。仓库内附驱动源码和构建依赖版本。[触控板构建说明](DirectUSB/VoodooI2CHID.md)
 
+屏幕亮度快捷键已在 03R 实测生效。富士通固件对内屏发送亮度加减通知，BrightnessKeys 负责交给 macOS 处理。在桌面构建命令中添加 `--brightness-keys ~/Downloads/BrightnessKeys-1.0.3-RELEASE.zip` 即可启用，保留原有系统设置滑块。[BrightnessKeys 1.0.3 官方发布](https://github.com/acidanthera/BrightnessKeys/releases/tag/1.0.3)
+
 桌面入口使用 WhateverXe 的 eDP 速率表修复。Wi-Fi 从 HeliPort 菜单连接，连接时勾选“记住此网络”，安装 HeliPort 后以桌面用户运行 `sh U9311-Tools/enable-heliport.sh`，使 HeliPort 随登录启动并隐藏系统无线菜单。[显卡修复源码](https://github.com/Karthik1268/WhateverXe/commit/d1bc03d25ea2c8adc6660172cca455fa138b9eb6) · [itlwm 使用说明](https://openintelwireless.github.io/itlwm/FAQ.html)
 
 这支普通 U 盘接回制作盘的 Mac 后，运行 `python3 tools/sync-usb.py`。新克隆首次同步时加上 `--identify 数据分区的GPT标识 EFI分区的GPT标识`，两个值取自 `diskutil info` 的 Disk / Partition UUID，并保存在本机的忽略目录。脚本按 GPT 分区标识确认目标，回收盘上独有的安装工具，并逐文件校验备份内容。项目工具和说明以仓库为准。EFI 文件树、IMG、配置和项目工具在本机 `backup/USB-U9311/` 与普通盘 `U9311/` 各有一份，启动备份在各自的 `Backup/BootFiles/`。发生覆盖时保留旧版本。实机确认的通用改动进入 Git，个性化 SMBIOS、整盘镜像、现场日志留在本机与普通盘。
 
-在 U9311/F 上，HeliPort 1.5.0 有过连接超时后仍未记住网络的情况。本机验证的补丁会在用户勾选「记住此网络」后立即把凭据写入登录钥匙串，只有不含密码的网络元数据进入备注。连接确认最多等待 120 秒。补丁可在官方 1.5.0 源码根目录用 `git apply /path/to/remember-network.patch` 应用，再以 Xcode 构建 HeliPort scheme 的 macOS Release 版本。实测应用重新启动、无线电重新开启后可以使用已保存的网络。 [HeliPort 补丁](DirectUSB/HeliPort/remember-network.patch) · [原版源码](https://github.com/OpenIntelWireless/HeliPort/tree/v1.5.0)
+在 U9311/F 上，HeliPort 1.5.0 有过连接超时后仍未记住网络的情况。本机验证的补丁会在用户勾选「记住此网络」后立即把凭据写入登录钥匙串，只有不含密码的网络元数据进入备注。连接确认最多等待 120 秒。补丁可在官方 1.5.0 源码根目录用 `git apply /path/to/remember-network.patch` 应用，再以 Xcode 构建 HeliPort scheme 的 macOS Release 版本。实测重启进入桌面后，无需输入密码即可自动联网。 [HeliPort 补丁](DirectUSB/HeliPort/remember-network.patch) · [原版源码](https://github.com/OpenIntelWireless/HeliPort/tree/v1.5.0)
