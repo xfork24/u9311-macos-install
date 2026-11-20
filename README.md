@@ -51,4 +51,19 @@ cmp Ventoy-SHA256SUMS.txt /media/hengliu/Ventoy/U9311/SHA256SUMS.txt
    (cd dist && sha256sum *.img > SHA256SUMS.txt)
    ```
 
-安装入口含恢复环境，安装时接电源和网线。首次实机安装前，两份配置已通过 OpenCore 1.0.8 的 ocvalidate 检查，模拟启动已到达苹果引导程序向 XNU 交接的阶段。内屏、声音、睡眠和 Metal 仍需在这台富士通上验证。
+安装入口含恢复环境，安装时接电源和网线。首次实机安装前，两份配置已通过 OpenCore 1.0.8 的 ocvalidate 检查，模拟启动已到达苹果引导程序向 XNU 交接的阶段。普通 U 盘的实机验证结果见下节。睡眠唤醒仍待测试。
+
+## 普通 U 盘直启与备份
+
+U9311/F（BIOS 2.47）已通过普通 GPT U 盘安装 Sequoia 15.8.3。安装基线为 01F。桌面基线包括夏普 1920×1080 内屏的 eDP 速率修复、Metal 计算、AppleALC、Intel 蓝牙和 itlwm。03T 修正了 I²C3 总线编号，使触控板可以枚举；实机反馈仍有输入问题。03P 的轮询能恢复触控和按键，移动流畅度仍在测试。内置三系统引导须在确认日用 EFI 后部署。
+
+完成上面的 SMBIOS 和 Apple APFS 驱动准备后，可从项目根目录生成两个独立的 EFI 目录。参数中的压缩包为 OpenCore 1.0.8 DEBUG 官方发布包，脚本会核对组件 SHA-256。
+
+```sh
+python3 tools/build-direct-usb.py install /tmp/U9311-01F-EFI --opencore ~/Downloads/OpenCore-1.0.8-DEBUG.zip
+python3 tools/build-direct-usb.py desktop /tmp/U9311-03T-EFI --opencore ~/Downloads/OpenCore-1.0.8-DEBUG.zip
+```
+
+桌面入口使用 WhateverXe 的 eDP 速率表修复。Wi-Fi 从 HeliPort 菜单连接，连接时勾选“记住此网络”，安装 HeliPort 后以桌面用户运行 `sh U9311-Tools/enable-heliport.sh`，使 HeliPort 随登录启动并隐藏系统无线菜单。[显卡修复源码](https://github.com/Karthik1268/WhateverXe/commit/d1bc03d25ea2c8adc6660172cca455fa138b9eb6) · [itlwm 使用说明](https://openintelwireless.github.io/itlwm/FAQ.html)
+
+这支普通 U 盘接回制作盘的 Mac 后，运行 `python3 tools/sync-usb.py`。新克隆首次同步时加上 `--identify 数据分区的GPT标识 EFI分区的GPT标识`，两个值取自 `diskutil info` 的 Disk / Partition UUID，并保存在本机的忽略目录。脚本按 GPT 分区标识确认目标，回收盘上独有的安装工具，并逐文件校验备份内容。项目工具和说明以仓库为准。EFI 文件树、IMG、配置和项目工具在本机 `backup/USB-U9311/` 与普通盘 `U9311/` 各有一份，启动备份在各自的 `Backup/BootFiles/`。发生覆盖时保留旧版本。实机确认的通用改动进入 Git，个性化 SMBIOS、整盘镜像、现场日志留在本机与普通盘。
