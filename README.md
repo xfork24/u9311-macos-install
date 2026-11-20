@@ -51,18 +51,20 @@ cmp Ventoy-SHA256SUMS.txt /media/hengliu/Ventoy/U9311/SHA256SUMS.txt
    (cd dist && sha256sum *.img > SHA256SUMS.txt)
    ```
 
-安装入口含恢复环境，安装时接电源和网线。首次实机安装前，两份配置已通过 OpenCore 1.0.8 的 ocvalidate 检查，模拟启动已到达苹果引导程序向 XNU 交接的阶段。普通 U 盘的实机验证结果见下节。睡眠唤醒仍待测试。
+安装入口含恢复环境，安装时接电源和网线。首次实机安装前，两份配置已通过 OpenCore 1.0.8 的 ocvalidate 检查，模拟启动已到达苹果引导程序向 XNU 交接的阶段。普通 U 盘的实机验证结果见下节。开盖接电自动睡眠曾无法唤醒，复位后系统记录了 EFI 睡眠失败码 0x1F。
 
 ## 普通 U 盘直启与备份
 
-U9311/F（BIOS 2.47）已通过普通 GPT U 盘安装 Sequoia 15.8.3。安装基线为 01F。桌面基线包括夏普 1920×1080 内屏的 eDP 速率修复、Metal 计算、AppleALC、Intel 蓝牙和 itlwm。03T 修正了 I²C3 总线编号，使触控板可以枚举；实机反馈仍有输入问题。03P 的轮询能恢复触控和按键，移动流畅度仍在测试。内置三系统引导须在确认日用 EFI 后部署。
+U9311/F（BIOS 2.47）已通过普通 GPT U 盘安装 Sequoia 15.8.3。安装基线为 01F。桌面基线包括夏普 1920×1080 内屏的 eDP 速率修复、Metal 计算、AppleALC、Intel 蓝牙和 itlwm。03T 修正了 I²C3 总线编号，使触控板可以枚举；实机反馈仍有输入问题。03P 的轮询恢复了触控输入。03Q 修正了实体右键，指针移动仍偶有卡顿和跳跃。内置三系统引导须在确认日用 EFI 后部署。
 
 完成上面的 SMBIOS 和 Apple APFS 驱动准备后，可从项目根目录生成两个独立的 EFI 目录。参数中的压缩包为 OpenCore 1.0.8 DEBUG 官方发布包，脚本会核对组件 SHA-256。
 
 ```sh
 python3 tools/build-direct-usb.py install /tmp/U9311-01F-EFI --opencore ~/Downloads/OpenCore-1.0.8-DEBUG.zip
-python3 tools/build-direct-usb.py desktop /tmp/U9311-03T-EFI --opencore ~/Downloads/OpenCore-1.0.8-DEBUG.zip
+python3 tools/build-direct-usb.py desktop /tmp/U9311-03Q-EFI --trackpad-buttons --opencore ~/Downloads/OpenCore-1.0.8-DEBUG.zip
 ```
+
+03Q 使用 VoodooI2CHID 上游的按键上报修复，空闲轮询间隔为 8 ms，活动时为 2 ms。仓库内附驱动源码和构建依赖版本。[触控板构建说明](DirectUSB/VoodooI2CHID.md)
 
 桌面入口使用 WhateverXe 的 eDP 速率表修复。Wi-Fi 从 HeliPort 菜单连接，连接时勾选“记住此网络”，安装 HeliPort 后以桌面用户运行 `sh U9311-Tools/enable-heliport.sh`，使 HeliPort 随登录启动并隐藏系统无线菜单。[显卡修复源码](https://github.com/Karthik1268/WhateverXe/commit/d1bc03d25ea2c8adc6660172cca455fa138b9eb6) · [itlwm 使用说明](https://openintelwireless.github.io/itlwm/FAQ.html)
 
