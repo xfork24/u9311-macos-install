@@ -1,0 +1,20 @@
+富士通 U9311/F · macOS Sequoia 15.8.3（24H241）
+适用机型 FMVU34013，BIOS 2.47。此导出包使用本机的 OpenCore 身份。
+
+复制到已有 Ventoy U 盘
+把整个 U9311 文件夹放到 Ventoy 的大数据分区。建议预留 22 GiB 空间，可使用 exFAT 或 NTFS。单个离线镜像为 19 GiB，超过 FAT32 的单文件限制。保留 Ventoy 自己的小 EFI 分区及原有文件。
+在这台 Mac 核对复制结果时，在终端输入 cd 和一个空格，把复制后的 U9311 文件夹拖进终端，按回车。再运行 shasum -a 256 -c SHA256SUMS.txt，清单各项都应显示 OK。
+
+安装时选哪个
+1. 接电源。开机按 F12，选 Ventoy U 盘的 UEFI 项。在 Ventoy 正常模式选 01F-Sequoia-15.8.3-Offline.img。在 OpenCore 选外置的 Install macOS Sequoia；若被隐藏，按空格展开。它包含苹果完整安装器，可供离线安装。
+2. 若镜像内的安装器在实体机交接后找不到安装资源，先用原普通安装 U 盘上的同版完整安装器继续。01F-Sequoia-15.8.3-Recovery.img 是独立的联网恢复入口，启动后选名称带 (dmg) 的 Sequoia 项；从这个入口重新安装时需要能访问苹果下载服务。
+3. 本机已有 APFS 目标卷 MacOS。需要重装时核对目标卷，并先备份其数据。共享硬盘上的 Windows、Ubuntu 和 EFI 分区都要保留。项目的 check-target.sh 用于原始 96 GiB FAT 目标，在已改成 APFS 的机器上应以磁盘工具显示的卷和物理位置核对。
+4. 安装期间每次重启继续选 01F，在 OpenCore 优先选 macOS Installer。该项消失后，选已安装的 MacOS，完成首次设置。
+5. 日常启动在 Ventoy 选 03W-Sequoia-Desktop.img，再选 MacOS。现有三系统已可从内置盘启用 03W。仅在新装系统配置显卡时，从 03W 进入桌面、核对整包 SHA-256 后运行 Tools/WhateverXe-Graphics-0.4.4.pkg，装好再从 03W 重启。无线使用 Tools/HeliPort-remember.tgz 内的 HeliPort.app，将其放进“应用程序”后以桌面用户运行 Tools/enable-heliport.sh。
+
+文件用途
+• EFI-01F.zip 和 EFI-03W.zip 分别提供独立的安装 EFI 和日用 EFI。分别解压都会得到完整 EFI 目录。使用 Ventoy 的 IMG 启动时，无需解压它们。部署到共享内置 EFI 时保留原有 Microsoft 和 ubuntu 目录。
+• Tools/03W-grub.cfg 是本机内置三系统菜单的备份，引用本机 EFI 卷及 EFI/U9311Mac/Bootstrap/Bootstrap.efi。
+• 普通安装 U 盘保存有导出备份。在 U9311/Backup/Ventoy-Export/Offline-IMG 内，layout.json、remaining-bytes.gz 与盘上已有的两份苹果 DMG 可以逐字节还原 19 GiB 离线镜像。进入该目录运行以下命令。省略 --output 时只验证，不占用 19 GiB 输出空间。
+  python3 restore-offline-img.py . "/Volumes/Install macOS Sequoia"
+  python3 restore-offline-img.py . "/Volumes/Install macOS Sequoia" --output "/Volumes/目标盘/01F-Sequoia-15.8.3-Offline.img"

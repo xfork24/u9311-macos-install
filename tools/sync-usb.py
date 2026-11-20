@@ -44,6 +44,13 @@ def copy_and_check(source, target, history, excludes=()):
         raise RuntimeError(f"Read-back mismatch for {target}: {pending[:400]}")
 
 
+def copy_missing(source, target):
+    if source.is_dir():
+        target.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["rsync", "-rltp", "--ignore-existing", "--exclude", "._*", "--exclude", ".DS_Store",
+                        str(source) + "/", str(target) + "/"], check=True)
+
+
 def main():
     os.umask(0o077)
     backup = ROOT / "backup"
@@ -71,18 +78,29 @@ def main():
         # USB-only tools and recovery files belong on the local copy as well.
         copy_and_check(usb, mirror, local_history / "usb", ("/Backup/BootFiles/", "/Backup/Previous/"))
         bootfiles = mirror / "Backup" / "BootFiles"
-        # Keep complete EFI bundles with their configs, drivers and kexts.
-        for relative in ("EFI", "Install/EFI", "DirectUSB", "tools", "Media", "dist"):
+        copy_missing(usb / "Backup" / "BootFiles", bootfiles)
+        for relative in ("EFI", "Install", "DirectUSB", "ACPI-source", "tools", "Media", "dist"):
             source = ROOT / relative
             if source.is_dir():
                 copy_and_check(source, bootfiles / relative, local_history / "boot" / relative,
-                               ("__pycache__/", "*-capture-*/", "u9311-02f-black-*/", "opencore-*.txt", "*.log"))
+                               ("__pycache__/",))
+        copy_and_check(ROOT / "Ventoy-SHA256SUMS.txt", bootfiles, local_history / "boot")
+        for relative in ("build-sources", "diagnostics"):
+            if (backup / relative).is_dir():
+                copy_and_check(backup / relative, mirror / "Backup" / relative, local_history / relative)
         for source in [ROOT / "U9311-Tools", ROOT / "安装说明.txt", ROOT / "README.md"]:
             destination = mirror / "Tools" if source.is_dir() else mirror
             copy_and_check(source, destination, local_history / "published" / destination.name)
         if usb_payload(*ids) != usb:
             raise RuntimeError("The installer USB mount changed during backup.")
+        copy_missing(backup / "history", mirror / "Backup" / "LocalHistory")
         copy_and_check(mirror, usb, usb_history, ("/Backup/Previous/",))
+        # This run may have just created new historical copies on the USB.
+        local_previous = mirror / "Backup" / "Previous"
+        usb_previous = usb / "Backup" / "Previous"
+        copy_missing(local_previous, usb_previous)
+        if usb_previous.is_dir():
+            copy_and_check(usb_previous, local_previous, local_history / "previous")
         print(f"Verified local and USB project copies:\n{mirror}\n{usb}", flush=True)
 
 
