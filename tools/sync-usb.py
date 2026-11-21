@@ -87,6 +87,7 @@ def synchronize(backup, usb=None, *, installer=None):
     mirror = backup / "USB-U9311"
     export = backup / "Ventoy导出/U9311"
     targets = (mirror, usb) if usb is not None else (mirror,)
+    prior = {base: manifest(base / SUMS) if (base / SUMS).is_file() else {} for base in targets}
     installer = usb.parent if usb is not None else installer
     entries = {}
 
@@ -182,6 +183,17 @@ def synchronize(backup, usb=None, *, installer=None):
         source = Path(work) / SUMS
         source.write_text(listing)
         for base in targets:
+            # Retire unchanged files from an earlier synchronized release, e.g. obsolete kexts.
+            for name in prior[base].keys() - entries.keys():
+                path = base / name
+                if path.is_symlink() or not path.resolve().is_relative_to(base.resolve()):
+                    continue
+                if path.is_file() and digest(path) == prior[base][name]:
+                    path.unlink()
+                    parent = path.parent
+                    while parent != base and parent.is_dir() and not any(parent.iterdir()):
+                        parent.rmdir()
+                        parent = parent.parent
             store_file(source, base / SUMS, digest(source))
     print(f"Verified {len(entries)} files in " + " and ".join(map(str, targets)), flush=True)
 

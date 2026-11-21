@@ -3,6 +3,10 @@
 set -eu
 user=$(id -un)
 [ "$(stat -f %Su /dev/console)" = "$user" ] || { echo "Run in the desktop user's session." >&2; exit 1; }
+if /usr/bin/kmutil showloaded 2>/dev/null | /usr/bin/grep -qF 'org.forbiddenitlwm.ForbiddenItlwm '; then
+    echo "This EFI uses the macOS Wi-Fi menu. HeliPort is only used with the older itlwm EFI."
+    exit 0
+fi
 app=/Applications/HeliPort.app
 [ -x "$app/Contents/MacOS/HeliPort" ] || { echo "Install HeliPort.app in Applications first." >&2; exit 1; }
 label=local.u9311.heliport-login

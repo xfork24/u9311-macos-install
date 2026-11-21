@@ -24,7 +24,7 @@ cmp Ventoy-SHA256SUMS.txt /media/hengliu/Ventoy/U9311/SHA256SUMS.txt
 
 联网安装可单独复制 `backup/Ventoy导出/U9311-online/` 到 Ventoy 数据分区，预留 2 GiB 空间。安装时选 `01F-Sequoia-15.8.3-Recovery.img`，富士通通过有线网络从苹果下载安装内容。这个目录自带 03W 日用引导、EFI、安装工具和校验清单。[联网安装步骤](U9311-Tools/Ventoy在线安装说明.txt)
 
-制作盘 Mac 上的 `backup/Ventoy导出/U9311/` 是可直接复制到 Ventoy 数据分区的目录。本次完整离线 IMG 为 19 GiB，版本为 Sequoia 15.8.3（24H241）。Ventoy 1.1.18 的 x86_64 UEFI 虚拟启动验证已到苹果引导程序向 XNU 交接。原 Ventoy 盘当时未接入，实体机安装记录来自普通安装盘。包内另附 01F 联网恢复 IMG、03W 日用 IMG、两份独立 EFI、图形和无线工具，以及整包 SHA-256 清单。[复制及启动步骤](U9311-Tools/Ventoy导出说明.txt)
+制作盘 Mac 上的 `backup/Ventoy导出/U9311/` 是可直接复制到 Ventoy 数据分区的目录。本次完整离线 IMG 为 19 GiB，版本为 Sequoia 15.8.3（24H241）。Ventoy 1.1.18 的 x86_64 UEFI 虚拟启动验证已到苹果引导程序向 XNU 交接。原 Ventoy 盘当时未接入，实体机安装记录来自普通安装盘。包内另附 01F 联网恢复 IMG、03W 日用 IMG、两份独立 EFI、图形驱动和网络检查工具，以及整包 SHA-256 清单。[复制及启动步骤](U9311-Tools/Ventoy导出说明.txt)
 
 普通安装盘上的 `U9311/Backup/Ventoy-Export/` 保存了小镜像、EFI 和工具。完整离线 IMG 的备份复用数据分区已有的苹果安装文件，附带布局和其余字节。在该盘的 `Offline-IMG` 目录运行还原脚本，可以先验证完整 IMG 的 SHA-256，再导出到空间充足的目标盘。[离线 IMG 还原工具](tools/restore-offline-img.py)
 
@@ -52,7 +52,7 @@ cmp Ventoy-SHA256SUMS.txt /media/hengliu/Ventoy/U9311/SHA256SUMS.txt
    echo 'c4739b191bc44629e9f2703ee15c1645825ecb46b9f77a5c08df706060b78287  Install/EFI/OC/Drivers/apfs.efi' | sha256sum -c -
    ```
 
-4. 构建两个 Ventoy 镜像。将生成的两份 `.img` 和仓库的 `安装说明.txt` 复制到 Ventoy 数据卷的 `U9311/` 下。将 `U9311-Tools/` 的内容复制到 U 盘的 `U9311/Tools/`。按清单下载 `WhateverXe-Graphics-0.4.4.pkg` 和 `HeliPort.dmg`，核对哈希后放入同一个 Tools 目录。镜像中含本次生成的身份、GPT 标识和 FAT 元数据，重新构建后应为新镜像计算校验值。[组件来源与校验](U9311-Tools/来源与校验.txt)
+4. 构建两个 Ventoy 镜像。将生成的两份 `.img` 和仓库的 `安装说明.txt` 复制到 Ventoy 数据卷的 `U9311/` 下。将 `U9311-Tools/` 的内容复制到 U 盘的 `U9311/Tools/`。重建早期 02 时，按清单下载 `WhateverXe-Graphics-0.4.4.pkg` 和 `HeliPort.dmg`，核对哈希后放入当时的 Tools 目录。现在使用的 03W 通过系统 Wi‑Fi 菜单连接。镜像中含本次生成的身份、GPT 标识和 FAT 元数据，重新构建后应为新镜像计算校验值。[组件来源与校验](U9311-Tools/来源与校验.txt)
 
    ```sh
    bash tools/build-media.sh dist
@@ -69,9 +69,9 @@ cmp Ventoy-SHA256SUMS.txt /media/hengliu/Ventoy/U9311/SHA256SUMS.txt
 
 ## 普通 U 盘直启与备份
 
-U9311/F（BIOS 2.47）已通过普通 GPT U 盘安装 Sequoia 15.8.3。安装基线为 01F。桌面基线包括夏普 1920×1080 内屏的 eDP 速率修复、Metal 计算、AppleALC、Intel 蓝牙和 itlwm。03T 修正了 I²C3 总线编号，使触控板可以枚举；实机反馈仍有输入问题。03P 的轮询恢复了触控输入。03Q 修正了实体右键。后续 03L 测试中内置触控板的指针移动仍会停顿、跳跃，外接鼠标正常。
+U9311/F（BIOS 2.47）已通过普通 GPT U 盘安装 Sequoia 15.8.3。安装基线为 01F。桌面基线包括夏普 1920×1080 内屏的 eDP 速率修复、Metal 计算、AppleALC、Intel 蓝牙与原生 Wi‑Fi。03T 修正了 I²C3 总线编号，使触控板可以枚举；实机反馈仍有输入问题。03P 的轮询恢复了触控输入。03Q 修正了实体右键。后续 03L 测试中内置触控板的指针移动仍会停顿、跳跃，外接鼠标正常。
 
-03W 的蓝牙组合为 IntelBluetoothFirmware 2.4.0、IntelBTPatcher 2.5.1 和 BlueToolFixup 2.7.2。U9311/F 上的 MX Anywhere 3 曾在低功耗链路建立后等待 PHY 更新约 30 秒并断开。单独更新 IntelBTPatcher 后，Sequoia 15.8.3 已能连接鼠标并移动光标。通过 03W 恢复日用 EFI 后，这个驱动会随系统加载。[IntelBTPatcher 发行来源](https://github.com/lshbluesky/IntelBluetoothFirmware/releases/tag/v2.5.1)
+03W 在 Sequoia 15.8.3（24H241）上使用 ForbiddenItlwm 0.6.0-beta.2、BTLEAdvFixup 0.9.3、IntelBluetoothFirmware 2.5.1、BlueToolFixup 2.7.2。富士通与 iPhone 已双向隔空投送成功，MX Anywhere 3 同时可用。Wi‑Fi 从「系统设置 → Wi‑Fi」连接。HeliPort 只适用于旧 itlwm 引导。安装 macOS 增量更新前，先用下文的回退入口启动一次，以停用 `-btleadv`，并核对新系统构建号的支持状态。[驱动发布及更新说明](https://github.com/retropineaple/ForbiddenItlwm/blob/v0.6.0-beta.2/docs/INSTALL.md)
 
 完成上面的 SMBIOS 和 Apple APFS 驱动准备后，可从项目根目录生成两个独立的 EFI 目录。参数中的压缩包为 OpenCore 1.0.8 DEBUG 官方发布包，脚本会核对组件 SHA-256。
 
@@ -90,8 +90,8 @@ python3 tools/build-direct-usb.py desktop /tmp/U9311-03Q-EFI --trackpad-buttons 
 
 实测前用 `pmset -g custom` 记录原值，再用 `sudo pmset -c hibernatemode 0 standby 0 powernap 0 tcpkeepalive 0` 设置接电测试条件。此配置在接电睡眠时依赖内存，断电且电池耗尽会丢失睡眠会话。唤醒后可用 `pmset -g log` 核对 `Idle Sleep` 和 `Wake from Deep Idle`。恢复时对照原值逐项设置。[Apple 电源管理参数说明](https://github.com/apple-oss-distributions/PowerManagement/blob/main/pmset/pmset.1)
 
-桌面入口使用 WhateverXe 的 eDP 速率表修复。Wi-Fi 从 HeliPort 菜单连接，连接时勾选“记住此网络”，安装 HeliPort 后以桌面用户运行 `sh U9311-Tools/enable-heliport.sh`，使 HeliPort 随登录启动并隐藏系统无线菜单。[显卡修复源码](https://github.com/Karthik1268/WhateverXe/commit/d1bc03d25ea2c8adc6660172cca455fa138b9eb6) · [itlwm 使用说明](https://openintelwireless.github.io/itlwm/FAQ.html)
+内置 GRUB 和 F12 的 macOS 项都通过 `EFI/U9311Mac/Bootstrap/Bootstrap.efi` 启动默认 03W。如果需要回退 Wi‑Fi 驱动或准备更新 macOS，在 GRUB 高亮 macOS 项，按 `e` 将该次启动的 `U9311Mac` 改为 `U9311OLD`，再按 `Ctrl+X`。要从源码材料构建原生 Wi‑Fi 的桌面 EFI，在现有桌面构建命令中增加 `--airdrop 下载目录`，目录放入驱动来源清单中的三个 ZIP。[发行包及校验值](U9311-Tools/来源与校验.txt)
 
 普通 U 盘接回制作盘的 Mac 后，运行 `python3 tools/sync-usb.py`。新克隆首次同步时加上 `--identify 数据分区的GPT标识 EFI分区的GPT标识`，两个值取自 `diskutil info` 的 Disk / Partition UUID。脚本核对分区身份，同步 01F 安装包、03W 日用引导和通过实机验证的内置三系统 EFI，并从 U 盘上的苹果安装文件重新计算完整离线镜像的 SHA-256。普通盘未连接时，可先只读挂载本地完整 IMG，然后运行 `python3 tools/sync-usb.py --local-from-installer "/实际挂载的安装卷路径"`，仅更新本地备份。同步成功后，本地入口说明为 `backup/从这里开始.txt`。[备份目录说明](U9311-Tools/备份目录说明.txt)
 
-在 U9311/F 上，HeliPort 1.5.0 有过连接超时后仍未记住网络的情况。本机验证的补丁会在用户勾选「记住此网络」后立即把凭据写入登录钥匙串，只有不含密码的网络元数据进入备注。连接确认最多等待 120 秒。补丁可在官方 1.5.0 源码根目录用 `git apply /path/to/remember-network.patch` 应用，再以 Xcode 构建 HeliPort scheme 的 macOS Release 版本。实测重启进入桌面后，无需输入密码即可自动联网。 [HeliPort 补丁](DirectUSB/HeliPort/remember-network.patch) · [原版源码](https://github.com/OpenIntelWireless/HeliPort/tree/v1.5.0)
+旧版 itlwm 引导所用的 HeliPort 1.5.0 有过连接超时后仍未记住网络的情况。本机验证的补丁会在用户勾选「记住此网络」后立即把凭据写入登录钥匙串，只有不含密码的网络元数据进入备注。连接确认最多等待 120 秒。补丁可在官方 1.5.0 源码根目录用 `git apply /path/to/remember-network.patch` 应用，再以 Xcode 构建 HeliPort scheme 的 macOS Release 版本。实测重启进入桌面后，无需输入密码即可自动联网。 [HeliPort 补丁](DirectUSB/HeliPort/remember-network.patch) · [原版源码](https://github.com/OpenIntelWireless/HeliPort/tree/v1.5.0)

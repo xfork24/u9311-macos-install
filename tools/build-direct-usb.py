@@ -34,11 +34,45 @@ def install_release_kext(archive, expected, name, kexts):
                 dest.chmod(0o755)
 
 
+def enable_airdrop(oc, config, archives):
+    kexts = oc / "Kexts"
+    releases = (
+        ("IntelBluetoothFirmware", "IntelBluetooth-2.5.1-RELEASE.zip",
+         "0e58a31993657ee2227fd548dff6d0cdf38bc9e4cb1495816e148c8d6ab43e5c"),
+        ("BTLEAdvFixup", "BTLEAdvFixup-0.9.3-Sequoia.zip",
+         "1418f643c939208b3930d5a333c9ea5b7e055dcf9b0c6ceece2a87cdda5fde31"),
+        ("ForbiddenItlwm", "ForbiddenItlwm-0.6.0-beta.2-Sequoia.zip",
+         "91251e1ac187794b1669cd8f81529e56ddc3040349575afde751b9e030e309d3"),
+    )
+    for name, filename, checksum in releases:
+        install_release_kext(archives / filename, checksum, name, kexts)
+
+    entries = config["Kernel"]["Add"]
+    template = next(e for e in entries if e["BundlePath"] == "itlwm.kext")
+    retired = {"itlwm.kext", "IntelBTPatcher.kext"}
+    entries[:] = [e for e in entries if e["BundlePath"] not in retired]
+    for bundle in retired:
+        shutil.rmtree(kexts / bundle)
+    index = next(i for i, e in enumerate(entries) if e["BundlePath"] == "BlueToolFixup.kext") + 1
+    entries[index:index] = [
+        dict(template, BundlePath=name + ".kext", ExecutablePath="Contents/MacOS/" + name,
+             MinKernel="24.0.0", MaxKernel="24.99.99", Enabled=True)
+        for name in ("BTLEAdvFixup", "ForbiddenItlwm")
+    ]
+    guid = "7C436110-AB2A-4BBB-A880-FE41995C9F82"
+    config["NVRAM"]["Add"][guid]["boot-args"] += (
+        " -btleadv -itlawdlcoexprobe -itlawdliface -itlawdlnativeup -itlawdlcoexrx"
+        " -itlawdlcoextx -itlawdlcoexmulti -itlawdlcoexdata -itlawdlmitx -itlawdlelicit"
+        " -itlawdlcaps -itlawdlsvcmerge -itlawdlawsync itlawdlintcoal=4 -itlawdlcoexbatx"
+        " -itlawdlcoexpeerpause -itlawdlcoexbatrace itlawdltxqueue=4096"
+    )
+
+
 def build(args, target):
     daily = args.profile == "desktop"
     trackpad = ROOT / "DirectUSB/VoodooI2CHID.kext" if args.trackpad_buttons else None
-    if (trackpad or args.brightness_keys or args.deep_idle) and not daily:
-        raise ValueError("Input, brightness and sleep options require the desktop profile.")
+    if (trackpad or args.brightness_keys or args.deep_idle or args.airdrop) and not daily:
+        raise ValueError("Input, brightness, sleep and AirDrop options require the desktop profile.")
     source = ROOT / ("EFI/OC" if daily else "Install/EFI/OC")
     # make-config.py supplies the same machine identity for both profiles.
     config = plistlib.loads((source / "config.plist").read_bytes())
@@ -96,6 +130,8 @@ def build(args, target):
                                                 Enabled=True, ExecutablePath="Contents/MacOS/S0ixStandby",
                                                 MinKernel="24.0.0", MaxKernel="24.99.99", PlistPath="Contents/Info.plist"))
         nv["boot-args"] = " ".join(args_list)
+        if args.airdrop:
+            enable_airdrop(target / "OC", config, args.airdrop)
         kext = ROOT / "DirectUSB/WhateverXe.kext"
         verified((kext / "Contents/MacOS/WhateverXe").read_bytes(), "7c024a69c5898f8f297e6ef28c60936ebba973337e2470a0a5d0819090359e94")
         shutil.copytree(kext, target / "OC/Kexts/WhateverXe.kext", dirs_exist_ok=True)
@@ -114,6 +150,8 @@ if __name__ == "__main__":
     parser.add_argument("--brightness-keys", type=Path, metavar="ZIP", help="BrightnessKeys-1.0.3-RELEASE.zip")
     parser.add_argument("--deep-idle", type=Path, metavar="DIR",
                         help="directory with the v0.5.4 S0ixStandby release ZIP and SSDT-DEEPIDLE.aml")
+    parser.add_argument("--airdrop", type=Path, metavar="DIR",
+                        help="directory with the three tested Sequoia Wi-Fi and Bluetooth release ZIPs")
     args = parser.parse_args()
     if args.output.exists():
         parser.error("Choose a new output directory.")

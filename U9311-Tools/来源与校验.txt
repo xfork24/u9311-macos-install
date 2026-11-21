@@ -6,6 +6,8 @@ d4d36cd2da7863cf7cbfcb0892d45c08457f4f4ddd065a073dd010e46bd63bcb  AppleALC-1.9.8
 e1c1c55347526d031a8ae2fdd1f52efa3019161e497fb38e1cfa809752f8af21  BrcmPatchRAM-2.7.2-RELEASE.zip  https://github.com/acidanthera/BrcmPatchRAM/releases/download/2.7.2/BrcmPatchRAM-2.7.2-RELEASE.zip
 e21149519856308c6c4c06e0917aef9e3423ff3e23b6ea77989099f4f2cf0f0a  ECEnabler-1.0.6-RELEASE.zip  https://github.com/averycblack/ECEnabler/releases/download/1.0.6/ECEnabler-1.0.6-RELEASE.zip
 78418daa11f620012fc53ba68cbd643c2642a45f2f96c594fd01aaf2bc68fe2b  IntelBluetooth-v2.4.0.zip  https://github.com/OpenIntelWireless/IntelBluetoothFirmware/releases/download/v2.4.0/IntelBluetooth-v2.4.0.zip
+91251e1ac187794b1669cd8f81529e56ddc3040349575afde751b9e030e309d3  ForbiddenItlwm-0.6.0-beta.2-Sequoia.zip  https://github.com/retropineaple/ForbiddenItlwm/releases/download/v0.6.0-beta.2/ForbiddenItlwm-0.6.0-beta.2-Sequoia.zip
+1418f643c939208b3930d5a333c9ea5b7e055dcf9b0c6ceece2a87cdda5fde31  BTLEAdvFixup-0.9.3-Sequoia.zip  https://github.com/retropineaple/ForbiddenItlwm/releases/download/v0.6.0-beta.2/BTLEAdvFixup-0.9.3-Sequoia.zip
 0e58a31993657ee2227fd548dff6d0cdf38bc9e4cb1495816e148c8d6ab43e5c  IntelBluetooth-2.5.1-RELEASE.zip  https://github.com/lshbluesky/IntelBluetoothFirmware/releases/download/v2.5.1/IntelBluetooth-2.5.1-RELEASE.zip
 cc02ea7e972ead536a51e5f6725e79f121026dbf36a766e97044ef2483fd29bc  IntelMausi-1.0.8-RELEASE.zip  https://github.com/acidanthera/IntelMausi/releases/download/1.0.8/IntelMausi-1.0.8-RELEASE.zip
 53967d7dcfaab01023a33df2e969a89522f13d6654a6a56ac4711b62dabf3ab8  Lilu-1.7.2-RELEASE.zip  https://github.com/acidanthera/Lilu/releases/download/1.7.2/Lilu-1.7.2-RELEASE.zip
