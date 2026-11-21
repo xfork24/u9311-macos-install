@@ -5,7 +5,7 @@
 | 本地目录 | 用途 |
 | --- | --- |
 | `01F-DirectUSB/` | 实机安装成功的 `config.plist` 参考副本，已与导出包的 `EFI-01F.zip` 核对。制作安装盘时使用 ZIP 中完整的 `EFI/`。 |
-| `03W-Sleep-DirectUSB/OC03W/` | 含原生 Wi‑Fi 和双向隔空投送的日用 OpenCore，共 64 个文件，与 `EFI-03W.zip` 中的 `EFI/OC/` 一致。原普通 U 盘的 03W 菜单从数据卷的 `U9311/Backup/BootFiles/Media/03W-Sleep-DirectUSB/OC03W/OpenCore.efi` 启动。运行 `python3 tools/sync-usb.py` 可从最终配置恢复这个目录。 |
+| `03W-Sleep-DirectUSB/OC03W/` | 含原生 Wi‑Fi、双向隔空投送和内置数字麦克风的日用 OpenCore，共 67 个文件，与 `EFI-03W.zip` 中的 `EFI/OC/` 一致。原普通 U 盘的 03W 菜单从数据卷的 `U9311/Backup/BootFiles/Media/03W-Sleep-DirectUSB/OC03W/OpenCore.efi` 启动。运行 `python3 tools/sync-usb.py` 可从最终配置恢复这个目录。 |
 | `03W-Sleep-DirectUSB/Sources/` | 03W 使用的 S0ixStandby 发布包、SSDT 和校验值。`Trackpad/` 保存 03W 沿用的 VoodooI2CHID、VoodooInput 源码及补丁。 |
 | `USB-ESP/` | 原普通安装 U 盘的小 EFI 分区镜像及 SHA-256。文件名中的 03L 是留档时最后加入的测试项。菜单通过原数据分区的 GPT 标识定位 03W，适用于修复原盘。新盘可直接恢复完整 01F 镜像。富士通内置三系统 EFI 的备份另见 [备份目录说明](../U9311-Tools/备份目录说明.txt)。 |
 

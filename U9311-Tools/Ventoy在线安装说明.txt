@@ -8,6 +8,9 @@
 3. 进入恢复界面后，选「重新安装 macOS Sequoia」。重装这台三系统机器时，核对并选择内置 APFS 卷 MacOS。网络超时请先检查富士通能否通过有线网络访问苹果下载服务。
 4. 安装期间每次重启仍从 Ventoy 选择同一个 01F 镜像。在 OpenCore 里看到 macOS Installer 就选它。该项消失后选 MacOS，完成首次设置。
 5. 日常通过 Ventoy 启动，选择 03W-Sequoia-Desktop.img → MacOS。已有内置 03W 的机器也可直接从内置盘进入。03W 使用系统原生 Wi‑Fi，在「系统设置 → Wi‑Fi」中选择网络。隔空投送在访达中打开；首次测试时，可在 iPhone 上选「所有人（10 分钟）」。03W 日用引导会自动加载蓝牙驱动。首次使用 MX Anywhere 3 时，在鼠标底部选好通道，长按 Easy-Switch 约 3 秒至指示灯快闪，再到「系统设置 → 蓝牙」连接鼠标。
+内置麦克风和 Siri
+全新安装后，从 03W 进入 macOS，打开 Tools/TGLDmic-0.5.0.1-U9311.pkg 安装录音插件。到「系统设置 → 声音 → 输入」选择 Internal Microphone (TGLDmic)，用语音备忘录录一句话并播放。想让 Siri 读出答案，在「系统设置 → Siri → Siri 回应」选择「优先使用语音回应」。系统重装后需再次安装插件，单独恢复 EFI 不会安装它。
+
 此版隔空投送驱动按系统构建号匹配。安装增量更新前，先从未启用 -btleadv 的 EFI 启动一次。当前三系统机可在 GRUB 的 macOS 项按 e，把引导路径里的 U9311Mac 临时改为 U9311OLD，按 Ctrl+X 启动。更新后先核对新构建号的驱动支持情况。
 
 校验复制结果

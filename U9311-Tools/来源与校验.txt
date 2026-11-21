@@ -28,3 +28,10 @@ Apple macOS Sequoia 15.8.3 (24H241), x86_64. 从 InstallAssistant.pkg 内的安�
 https://swcdn.apple.com/content/downloads/35/30/142-54123-A_L1FDSOKH17/4v632s6ip8ranyhu7hc09akv6d5239x9tq/InstallAssistant.pkg
 0ddd8edad00640cf40c27d378e0a64fde22a0838880811c3bc0bef1b070adc10  BaseSystem.chunklist
 54bd71da910666f676ada5b46316d9865726789e861b7b22d92ff90edeadb903  BaseSystem.dmg
+
+03W 内置数字麦克风与 Siri（富士通 U9311/F，Sequoia 15.8.3）
+TGLDmic 0.5.0 提供 Intel Smart Sound 输入。系统插件从同项目的 Siri 修正 eb87a2617ce974181b484705ac7cd2f5cf37654a 构建，输入源标识为 imic。
+25c3f8dbc2881dca9fbdd3ef38fd477bb17c32d55044e8d370b906b726d0bff5  TGLDmic-0.5.0-kext.zip  https://github.com/labrouss/TGLDmic/releases/tag/v0.5.0
+aa1dcab0e6b740e1f1ae60914958df665a489a14c5eb739f57e3884b06d77e80  TGLDmic-0.5.0.1-U9311.pkg  https://github.com/labrouss/TGLDmic/pull/4
+日用 AppleALC 基于 1.9.8。ALC255 的 layout 3 使用空 Inputs，并移除 Mic 字典。为 layout 3 单独复制 PlatformsM 的 PathMap 255，移除输入路径 8 → 35 → 18，保留扬声器和耳机输出。用 Lilu 1.7.2 头文件和 MacKernelSDK 3f750085caa17ec3a7880f11c11bf4f48cd6a164 构建。
+a3ccc4d0da2d0c66502678faa80761be0bfdbf2c9fe0ebd545d2d475e4155635  AppleALC.kext/Contents/MacOS/AppleALC  https://github.com/acidanthera/AppleALC/tree/1.9.8

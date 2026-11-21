@@ -14,3 +14,4 @@
 • Backup/BootFiles/Media/USB-ESP　原普通 U 盘的小 EFI 分区镜像及校验文件，用于恢复这支盘的原有启动菜单。
 • Backup/InternalBoot/20261120-220252-FAT-names　富士通从内置盘成功启动三系统后留存的配置。目录沿用最初备份时的名称，内容已更新到实机验证的 OpenCore → Ubuntu 24.04 版本。esp-after.img 是整个共享 EFI 分区，包含 Windows、Ubuntu、默认的原生 Wi‑Fi/隔空投送引导 U9311Mac 和更新系统时可用的旧驱动回退入口 U9311OLD。U9311Mac 是可单独恢复的 03W 目录，64 个文件可按 profile.sha256 核对。grub-custom.cfg 是验证通过的 GRUB 菜单项，加载 EFI/U9311Mac/Bootstrap/Bootstrap.efi。
 • SHA256SUMS.txt　进入当前目录运行 shasum -a 256 -c SHA256SUMS.txt，可逐项检查备份。要核验整个离线 IMG，还需按上述说明运行还原工具。
+• 日用 03W 内含数字麦克风驱动。重装 macOS 后，请安装对应导出目录 Tools/TGLDmic-0.5.0.1-U9311.pkg，然后在声音输入里选择 Internal Microphone (TGLDmic)。
