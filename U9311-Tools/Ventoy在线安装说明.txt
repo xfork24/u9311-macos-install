@@ -7,7 +7,7 @@
 2. 在 Ventoy 选 01F-Sequoia-15.8.3-Recovery.img，使用正常模式。在 OpenCore 选名称带 Sequoia 和 (dmg) 的恢复项。若看不到，按空格展开。
 3. 进入恢复界面后，选「重新安装 macOS Sequoia」。重装这台三系统机器时，核对并选择内置 APFS 卷 MacOS。网络超时请先检查富士通能否通过有线网络访问苹果下载服务。
 4. 安装期间每次重启仍从 Ventoy 选择同一个 01F 镜像。在 OpenCore 里看到 macOS Installer 就选它。该项消失后选 MacOS，完成首次设置。
-5. 日常通过 Ventoy 启动，选择 03W-Sequoia-Desktop.img → MacOS。已有内置 03W 的机器也可直接从内置盘进入。
+5. 日常通过 Ventoy 启动，选择 03W-Sequoia-Desktop.img → MacOS。已有内置 03W 的机器也可直接从内置盘进入。03W 日用引导会自动加载蓝牙驱动。首次使用 MX Anywhere 3 时，在鼠标底部选好通道，长按 Easy-Switch 约 3 秒至指示灯快闪，再到「系统设置 → 蓝牙」连接鼠标。
 
 校验复制结果
 在终端进入复制后的 U9311-online 文件夹。macOS 运行 shasum -a 256 -c SHA256SUMS.txt，Ubuntu 运行 sha256sum -c SHA256SUMS.txt，所有条目都应显示 OK。

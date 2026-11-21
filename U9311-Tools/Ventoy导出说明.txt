@@ -21,6 +21,8 @@
 4. 安装期间每次重启继续选 01F，在 OpenCore 优先选 macOS Installer。该项消失后，选已安装的 MacOS，完成首次设置。
 5. 日常启动在 Ventoy 选 03W-Sequoia-Desktop.img，再选 MacOS。现有三系统已可从内置盘启用 03W。仅在新装系统配置显卡时，从 03W 进入桌面、核对整包 SHA-256 后运行 Tools/WhateverXe-Graphics-0.4.4.pkg，装好再从 03W 重启。无线使用 Tools/HeliPort-remember.tgz 内的 HeliPort.app，将其放进“应用程序”后以桌面用户运行 Tools/enable-heliport.sh。
 
+03W 日用引导会自动加载蓝牙驱动。首次使用 MX Anywhere 3 时，在鼠标底部选好通道，长按 Easy-Switch 约 3 秒至指示灯快闪，再到「系统设置 → 蓝牙」连接鼠标。
+
 二、制作普通直启安装 U 盘
 最简单的方法是在 Ubuntu 打开「磁盘」，按容量、型号选中新 U 盘本身，在右上角的整盘菜单选「恢复磁盘映像」。选择本目录的 01F-Sequoia-15.8.3-Offline.img，核对目标再开始。写入会抹掉目标整盘。IMG 已包含 GPT、小 EFI 分区里的 01F 和完整苹果安装卷。写完后重新插拔 U 盘。目标比镜像大时，余下空间可留空；若工具提示备用 GPT 表不在盘尾，可在卸载该 U 盘各分区后，用 Ubuntu 的 gdisk 软件包执行 sudo sgdisk -e /dev/sdX，再用 sudo sgdisk -v /dev/sdX 核对。这里的设备名同样要换成刚写入的外置整盘。
 开机按 F12 选这支普通 U 盘，在 OpenCore 选 Install macOS Sequoia。安装期间重启仍从它进入，优先选 macOS Installer，直到该项消失。日常使用已装好的系统选内置 03W。若需要制作独立的 03W 应急启动盘，可将 03W-Sequoia-Desktop.img 按同样的整盘恢复方法写入另一支 U 盘。

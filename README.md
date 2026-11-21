@@ -71,6 +71,8 @@ cmp Ventoy-SHA256SUMS.txt /media/hengliu/Ventoy/U9311/SHA256SUMS.txt
 
 U9311/F（BIOS 2.47）已通过普通 GPT U 盘安装 Sequoia 15.8.3。安装基线为 01F。桌面基线包括夏普 1920×1080 内屏的 eDP 速率修复、Metal 计算、AppleALC、Intel 蓝牙和 itlwm。03T 修正了 I²C3 总线编号，使触控板可以枚举；实机反馈仍有输入问题。03P 的轮询恢复了触控输入。03Q 修正了实体右键。后续 03L 测试中内置触控板的指针移动仍会停顿、跳跃，外接鼠标正常。
 
+03W 的蓝牙组合为 IntelBluetoothFirmware 2.4.0、IntelBTPatcher 2.5.1 和 BlueToolFixup 2.7.2。U9311/F 上的 MX Anywhere 3 曾在低功耗链路建立后等待 PHY 更新约 30 秒并断开。单独更新 IntelBTPatcher 后，Sequoia 15.8.3 已能连接鼠标并移动光标。通过 03W 恢复日用 EFI 后，这个驱动会随系统加载。[IntelBTPatcher 发行来源](https://github.com/lshbluesky/IntelBluetoothFirmware/releases/tag/v2.5.1)
+
 完成上面的 SMBIOS 和 Apple APFS 驱动准备后，可从项目根目录生成两个独立的 EFI 目录。参数中的压缩包为 OpenCore 1.0.8 DEBUG 官方发布包，脚本会核对组件 SHA-256。
 
 ```sh
