@@ -9,6 +9,8 @@
 | `03W-Sleep-DirectUSB/Sources/` | 03W 使用的 S0ixStandby 发布包、SSDT 和校验值。`Trackpad/` 保存 03W 沿用的 VoodooI2CHID、VoodooInput 源码及补丁。 |
 | `USB-ESP/` | 原普通安装 U 盘的小 EFI 分区镜像及 SHA-256。文件名中的 03L 是留档时最后加入的测试项。菜单通过原数据分区的 GPT 标识定位 03W，适用于修复原盘。新盘可直接恢复完整 01F 镜像。富士通内置三系统 EFI 的备份另见 [备份目录说明](../U9311-Tools/备份目录说明.txt)。 |
 
+默认 03W 已在这台 U9311/F 上验证。重启前保持 SD 卡和 LG HDR 4K 接在机身 HDMI，关闭显示器该输入的「HDMI Ultra HD Deep Color」。从 GRUB 正常进入 macOS 后，显示清晰，已插入的 SD 卡直接出现在桌面。
+
 ## 从本地恢复普通安装 U 盘
 
 两种盘共用 `backup/Ventoy导出/U9311/01F-Sequoia-15.8.3-Offline.img`，备份中只需一份完整离线安装器。
