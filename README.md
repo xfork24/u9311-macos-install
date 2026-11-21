@@ -22,6 +22,8 @@ cmp Ventoy-SHA256SUMS.txt /media/hengliu/Ventoy/U9311/SHA256SUMS.txt
 
 ## 复制到 Ventoy 的安装包
 
+联网安装可单独复制 `backup/Ventoy导出/U9311-online/` 到 Ventoy 数据分区，预留 2 GiB 空间。安装时选 `01F-Sequoia-15.8.3-Recovery.img`，富士通通过有线网络从苹果下载安装内容。这个目录自带 03W 日用引导、EFI、安装工具和校验清单。[联网安装步骤](U9311-Tools/Ventoy在线安装说明.txt)
+
 制作盘 Mac 上的 `backup/Ventoy导出/U9311/` 是可直接复制到 Ventoy 数据分区的目录。本次完整离线 IMG 为 19 GiB，版本为 Sequoia 15.8.3（24H241）。Ventoy 1.1.18 的 x86_64 UEFI 虚拟启动验证已到苹果引导程序向 XNU 交接。原 Ventoy 盘当时未接入，实体机安装记录来自普通安装盘。包内另附 01F 联网恢复 IMG、03W 日用 IMG、两份独立 EFI、图形和无线工具，以及整包 SHA-256 清单。[复制及启动步骤](U9311-Tools/Ventoy导出说明.txt)
 
 普通安装盘上的 `U9311/Backup/Ventoy-Export/` 保存了小镜像、EFI 和工具。完整离线 IMG 的备份复用数据分区已有的苹果安装文件，附带布局和其余字节。在该盘的 `Offline-IMG` 目录运行还原脚本，可以先验证完整 IMG 的 SHA-256，再导出到空间充足的目标盘。[离线 IMG 还原工具](tools/restore-offline-img.py)

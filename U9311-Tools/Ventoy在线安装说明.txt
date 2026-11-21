@@ -1,0 +1,18 @@
+富士通 U9311/F · macOS Sequoia 联网安装
+
+将整个 U9311-online 文件夹复制到已安装 Ventoy 的 U 盘大数据分区，预留 2 GiB 空间即可。这个文件夹可单独保存和迁移。01F 镜像内置 Sequoia 15.8.3（24H241）的 Intel 恢复环境，安装系统时由富士通从苹果服务器下载所需内容。
+
+首次安装
+1. 接好富士通的电源和有线网络。开机按 F12，选 Ventoy U 盘的 UEFI 启动项。
+2. 在 Ventoy 选 01F-Sequoia-15.8.3-Recovery.img，使用正常模式。在 OpenCore 选名称带 Sequoia 和 (dmg) 的恢复项。若看不到，按空格展开。
+3. 进入恢复界面后，选「重新安装 macOS Sequoia」。重装这台三系统机器时，核对并选择内置 APFS 卷 MacOS。网络超时请先检查富士通能否通过有线网络访问苹果下载服务。
+4. 安装期间每次重启仍从 Ventoy 选择同一个 01F 镜像。在 OpenCore 里看到 macOS Installer 就选它。该项消失后选 MacOS，完成首次设置。
+5. 日常通过 Ventoy 启动，选择 03W-Sequoia-Desktop.img → MacOS。已有内置 03W 的机器也可直接从内置盘进入。
+
+校验复制结果
+在终端进入复制后的 U9311-online 文件夹。macOS 运行 shasum -a 256 -c SHA256SUMS.txt，Ubuntu 运行 sha256sum -c SHA256SUMS.txt，所有条目都应显示 OK。
+
+随附文件
+• EFI-01F.zip 和 EFI-03W.zip 是可独立恢复的安装 EFI 和日用 EFI。通过 Ventoy 启动 IMG 时，直接选镜像即可。
+• Tools/ 包含图形驱动安装包、HeliPort、启动项及检查工具。全新系统需要配置图形和无线时使用。此包使用本机的 OpenCore 身份。
+• 若从空白 U 盘开始，可在 Ubuntu 上解压 Tools/ventoy-1.1.18-linux.tar.gz，运行其中的 VentoyGUI.x86_64，按型号和容量选中要清空的外置 U 盘后安装 Ventoy。制作会抹掉目标整盘。完成后将整个 U9311-online 复制到它的大数据分区。
