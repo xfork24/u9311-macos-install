@@ -65,7 +65,7 @@ cmp Ventoy-SHA256SUMS.txt /media/hengliu/Ventoy/U9311/SHA256SUMS.txt
 
 这台 U9311/F 已在拔掉 U 盘后，通过 Ubuntu 的 GRUB 菜单分别登录 Ubuntu 24.04、Windows 11 和 macOS Sequoia。内置 OpenCore 的菜单也可选择 `Ubuntu 24.04`，通过 Ubuntu 原有的 shim 进入 GRUB 后选择 `Ubuntu`，已实机进入桌面。日常启动 macOS 时，先选 `macOS Sequoia (OpenCore U9311)`，在 OpenCore 中再选 `MacOS`。固件 F12 菜单保留了原有的 Ubuntu、Windows Boot Manager，并新增了 `macOS Sequoia U9311`。[内置盘 GRUB 配置](U9311-Tools/03W-grub.cfg)
 
-内置盘使用 03W。首次复制到共享 EFI 时，三个驱动目录出现重复的 FAT 短文件名。Ubuntu 开机检查时将目录改名为 `FSCK0000.000`，OpenCore 随后在加载键盘驱动时报告缺少 `Info.plist`。在 Ubuntu 下恢复长文件名后，三个目录都获得了独立的短文件名。当前备份已移除指向旧入口的 `add-to-grub.sh`。内置 03W 目录的 64 个文件已逐项核对，共享 EFI 分区也已通过 FAT 检查。制作盘 Mac 的 `backup/USB-U9311/Backup/InternalBoot/` 下，以 `-FAT-names` 结尾的目录保存本机最新的 `esp-after.img`，包括已经实测的 OpenCore Ubuntu 菜单项。[启动和恢复步骤](安装说明.txt)
+内置盘使用 03W。首次复制到共享 EFI 时，三个驱动目录出现重复的 FAT 短文件名。Ubuntu 开机检查时将目录改名为 `FSCK0000.000`，OpenCore 随后在加载键盘驱动时报告缺少 `Info.plist`。在 Ubuntu 下恢复长文件名后，三个目录都获得了独立的短文件名。当前备份已移除指向旧入口的 `add-to-grub.sh`。内置 03W 目录的 69 个文件已逐项核对，共享 EFI 分区也已通过 FAT 检查。制作盘 Mac 的 `backup/USB-U9311/Backup/InternalBoot/` 下，以 `-FAT-names` 结尾的目录保存本机最新的 `esp-after.img`，包括已经实测的 OpenCore Ubuntu 菜单项。[启动和恢复步骤](安装说明.txt)
 
 ## 普通 U 盘直启与备份
 

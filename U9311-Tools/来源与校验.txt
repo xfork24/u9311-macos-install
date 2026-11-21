@@ -35,3 +35,9 @@ TGLDmic 0.5.0 提供 Intel Smart Sound 输入。系统插件从同项目的 Siri
 aa1dcab0e6b740e1f1ae60914958df665a489a14c5eb739f57e3884b06d77e80  TGLDmic-0.5.0.1-U9311.pkg  https://github.com/labrouss/TGLDmic/pull/4
 日用 AppleALC 基于 1.9.8。ALC255 的 layout 3 使用空 Inputs，并移除 Mic 字典。为 layout 3 单独复制 PlatformsM 的 PathMap 255，移除输入路径 8 → 35 → 18，保留扬声器和耳机输出。用 Lilu 1.7.2 头文件和 MacKernelSDK 3f750085caa17ec3a7880f11c11bf4f48cd6a164 构建。
 a3ccc4d0da2d0c66502678faa80761be0bfdbf2c9fe0ebd545d2d475e4155635  AppleALC.kext/Contents/MacOS/AppleALC  https://github.com/acidanthera/AppleALC/tree/1.9.8
+
+03W 内置 O2Micro 读卡器（PCI 1217:8520，Sequoia 15）
+驱动来自 Dortania OpenCore Legacy Patcher 的 BigSurSDXC-v1.0.0.zip。保留原可执行文件，在 Info.plist 的 IONameMatch 中匹配 pci1217,8520。OpenCore 对 com.apple.driver.BigSurSDXC 中的一处 pci14e4,16bc 替换为 pci1217,8520，限 x86_64 Darwin 24。默认 03W 与两份 Ventoy 导出使用同一补丁。
+cae42ad863f5d4ae8a622ce1a9632f7268952fdeeb43306fe7f0d2be7275d3f8  BigSurSDXC-v1.0.0.zip  https://github.com/dortania/OpenCore-Legacy-Patcher/blob/main/payloads/Kexts/Misc/BigSurSDXC-v1.0.0.zip
+dfb316e5e4ce745da6dbbb7470af1720e6719741e2a900aff3b3114e35060bd7  BigSurSDXC.kext/Contents/MacOS/BigSurSDXC
+e05a1838d4eba6f983f3a967905e877fa93f3cf08c2011ec651bc23cf7369066  BigSurSDXC.kext/Contents/Info.plist
