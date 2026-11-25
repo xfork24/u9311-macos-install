@@ -1,5 +1,8 @@
 富士通 U9311/F · 最终安装与启动备份
 
+恢复内置 macOS EFI 或驱动时，请打开 Storage512G 根目录的 U9311-Recovery。
+从其中的「从这里开始.txt」操作。它包含最终 03W EFI 和对应的 macOS 驱动安装包。
+
 制作盘 Mac 的 backup 目录
 离线安装或重建普通直启盘，见 Ventoy导出/U9311/使用说明.txt。联网安装，见 Ventoy导出/U9311-online/使用说明.txt。
 • Ventoy导出/U9311-online　可独立复制到 Ventoy 数据分区。内含 01F 联网恢复镜像、03W 日用镜像、EFI、驱动和制作工具，安装时从苹果服务器下载系统。

@@ -81,7 +81,7 @@
 1. 从富士通拔下安装 U 盘。正常开机进入 Ubuntu 的 GRUB 菜单。如需手动调出，开机按 F12 选 Ubuntu。
 2. 进入 macOS 时选 macOS Sequoia (OpenCore U9311)，在第二层 OpenCore 菜单里选自己的系统卷（本机为 MacOS）。进入 Windows 选第一层的 Windows Boot Manager。进入 Ubuntu 选第一层的 Ubuntu。F12 中另有 macOS Sequoia U9311，可直接进入 OpenCore。
 3. GRUB 和固件的 macOS 项都使用内置 EFI 的 /EFI/U9311Mac/Bootstrap/Bootstrap.efi。它从上级目录加载 OpenCore.efi 和这台机器的 03W 配置。Ubuntu 的完整菜单在 /boot/grub/grub.cfg，新增项在 /boot/grub/custom.cfg。U9311-Tools/03W-grub.cfg 是本机新增项的副本。普通 U 盘和制作盘的 Mac 各有一份 Backup/InternalBoot 下的完整 EFI 镜像及 03W 文件，可用于恢复。
-4. 恢复本机备份时，选 Backup/InternalBoot 里经过 FAT 短文件名修复的版本，镜像名为 esp-after.img，同目录有对应的 .sha256 和完整的 U9311Mac 目录。在 Ubuntu 中可对未挂载的镜像运行 fsck.fat -n esp-after.img，再运行 sha256sum -c esp-after.img.sha256。早期镜像出现过重复的 FAT 短文件名，Ubuntu 开机检查时把三个驱动目录改成了 FSCK0000.000，导致 OpenCore 报 VoodooPS2Keyboard 的 Info.plist 缺失。恢复或重建启动盘后，先检查镜像，再按 profile.sha256 从 U9311Mac 目录核对文件路径和内容。
+4. 恢复内置 macOS EFI 或驱动，打开 Storage512G 根目录的 U9311-Recovery，按文件夹内的「从这里开始.txt」操作。EFI 和蓝牙等引导驱动从 Ubuntu 恢复，麦克风与 Siri 插件从 macOS 桌面安装。Backup/InternalBoot 下的 esp-after.img 是整个共享 EFI 的归档，需要核对时，可对未挂载的镜像运行 fsck.fat -n esp-after.img 和 sha256sum -c esp-after.img.sha256。
 5. 若要撤销新增菜单，可在 Ubuntu 对照 /var/backups/u9311-grub.* 中对应的备份恢复原 custom.cfg。本机部署前没有这个文件；如后来又添加了菜单项，仅删除本次追加的段落即可。仍可从 F12 的 Windows Boot Manager 直接进入 Windows。
 
 使用早期 Ventoy 02，并准备将它的 EFI/OC 部署到内置盘时，按下面的步骤操作。

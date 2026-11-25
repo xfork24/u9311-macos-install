@@ -1,0 +1,61 @@
+富士通 U9311/F · EFI 和驱动恢复
+版本 03W-24H241-20261121 · macOS Sequoia 15.8.3 (24H241)
+
+日常恢复统一从外接盘 Storage512G 根目录进入 U9311-Recovery。
+要复制到另一个备份盘，请复制整个文件夹，保留 u9311-restore.sh 和 payload 的相对位置。
+EFI 含这台机器原来的 SMBIOS 标识，请把此文件夹作为个人备份保存。
+
+1. 检查恢复包
+在文件管理器打开 U9311-Recovery，在该目录打开终端，运行
+
+    bash u9311-restore.sh verify
+
+EFI 的 69 个文件和两份 macOS 安装包均应通过 SHA-256 校验。
+
+2. EFI、蓝牙、Wi-Fi、隔空投送或其他内置引导驱动出问题
+开机按 F12 选 Ubuntu，接上 Storage512G，在文件管理器打开 U9311-Recovery。
+在该目录打开终端，先核对正在使用的内置 EFI 文件。
+
+    sudo bash u9311-restore.sh check-efi
+
+提示内置 EFI 与包内版本不一致时，再运行
+
+    sudo bash u9311-restore.sh efi
+
+脚本按 GPT 分区标识和 FAT 卷标识找到内置分区，替换 EFI/U9311Mac。
+原目录打包到 U9311-Recovery/rollbacks；其他引导目录继续使用原有文件。
+旧目录和新目录的文件同时存在一小段时间。空间不足时，旧引导仍在原位。
+看到恢复成功后，弹出外接盘，重启按 F12 选 macOS Sequoia U9311 → MacOS。
+如果 Ubuntu 本身无法启动，可从 SystemRescue 挂载外接备份盘后执行同样的命令。
+
+3. 已经进入 macOS，内置麦克风或 Siri 出问题
+在富士通的 macOS 桌面打开终端，输入
+
+    cd /Volumes/Storage512G/U9311-Recovery
+    bash u9311-restore.sh status
+
+如果刚恢复过 EFI，先正常重启一次。若问题仍在，运行
+
+    sudo bash u9311-restore.sh audio
+
+这会安装含 Siri 修复的 TGLDmic 0.5.0.1 系统录音插件，并重新加载 Core Audio。
+在「系统设置 → 声音 → 输入」选择 Internal Microphone (TGLDmic)，说话时确认输入电平跳动。
+用语音备忘录录一句并回放，然后用 Siri 问「现在几点了」。要听到答案，选「Siri 回应 → 优先使用语音回应」。
+蓝牙恢复后，实际连接鼠标验证；隔空投送可以与 iPhone 各传一张照片。
+
+4. 显卡系统组件损坏或重装后缺失
+通过最终 03W 启动并进入 macOS，运行
+
+    cd /Volumes/Storage512G/U9311-Recovery
+    sudo bash u9311-restore.sh graphics
+
+脚本会检查系统构建号和 AMFI 信任配置。安装成功后重启，检查「系统信息 → 图形卡/显示器」的 Metal 支持。
+
+组件来源
+EFI 取自 11 月 21 日实机验证后读回的内置 U9311Mac 快照。原备份目录名为 20261120-220252-FAT-names，
+内容在 11 月 21 日更新。包含 BTLEAdvFixup 0.9.3、IntelBluetoothFirmware 2.5.1、BlueToolFixup 2.7.2、
+ForbiddenItlwm 0.6.0-beta.2、修过布局的 AppleALC、TGLDmic 0.5.0、SDXC 和其余 03W 驱动。
+macOS 安装包来自同一版本的 Ventoy 在线导出。驱动按系统构建号适配，升级 macOS 后需要新的实测恢复包。
+
+更新恢复包时，从新版本实机验证并读回的 EFI 和安装包创建完整副本，更新脚本中的版本与校验值，
+执行 verify 后再将新文件夹发布为 U9311-Recovery。保留旧包作历史备份。

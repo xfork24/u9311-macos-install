@@ -92,6 +92,8 @@ python3 tools/build-direct-usb.py desktop /tmp/U9311-03Q-EFI --trackpad-buttons 
 
 内置 GRUB 和 F12 的 macOS 项都通过 `EFI/U9311Mac/Bootstrap/Bootstrap.efi` 启动默认 03W。如果需要回退 Wi‑Fi 驱动或准备更新 macOS，在 GRUB 高亮 macOS 项，按 `e` 将该次启动的 `U9311Mac` 改为 `U9311OLD`，再按 `Ctrl+X`。要从源码材料构建原生 Wi‑Fi 的桌面 EFI，在现有桌面构建命令中增加 `--airdrop 下载目录`，目录放入驱动来源清单中的三个 ZIP。[发行包及校验值](U9311-Tools/来源与校验.txt)
 
+这台富士通的内置 macOS EFI 或驱动需要恢复时，从 `Storage512G` 根目录打开 `U9311-Recovery`。这套独立恢复包含最终 03W、蓝牙和 Wi‑Fi 驱动、配套的麦克风与 Siri 插件，以及单独安装的显卡组件。[最终恢复包说明](U9311-Tools/最终恢复包说明.txt)
+
 普通 U 盘接回制作盘的 Mac 后，运行 `python3 tools/sync-usb.py`。新克隆首次同步时加上 `--identify 数据分区的GPT标识 EFI分区的GPT标识`，两个值取自 `diskutil info` 的 Disk / Partition UUID。脚本核对分区身份，同步 01F 安装包、03W 日用引导和通过实机验证的内置三系统 EFI，并从 U 盘上的苹果安装文件重新计算完整离线镜像的 SHA-256。普通盘未连接时，可先只读挂载本地完整 IMG，然后运行 `python3 tools/sync-usb.py --local-from-installer "/实际挂载的安装卷路径"`，仅更新本地备份。同步成功后，本地入口说明为 `backup/从这里开始.txt`。[备份目录说明](U9311-Tools/备份目录说明.txt)
 
 旧版 itlwm 引导所用的 HeliPort 1.5.0 有过连接超时后仍未记住网络的情况。本机验证的补丁会在用户勾选「记住此网络」后立即把凭据写入登录钥匙串，只有不含密码的网络元数据进入备注。连接确认最多等待 120 秒。补丁可在官方 1.5.0 源码根目录用 `git apply /path/to/remember-network.patch` 应用，再以 Xcode 构建 HeliPort scheme 的 macOS Release 版本。实测重启进入桌面后，无需输入密码即可自动联网。 [HeliPort 补丁](DirectUSB/HeliPort/remember-network.patch) · [原版源码](https://github.com/OpenIntelWireless/HeliPort/tree/v1.5.0)
